@@ -41,7 +41,7 @@ public class Address {
 
     private String postalCode;
 
-    private boolean isDefault;
+    private boolean defaultAddress;
 
     @CreatedDate
     private Instant createdAt;

@@ -38,12 +38,13 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         validateUser(user);
         Address address = addressMapper.toEntity(addressRequest);
-        if ( address.isDefault() ) {
-            addressRepository.findByUserIdAndIsDefaultTrue(addressRequest.getUserId())
+        if ( address.isDefaultAddress() ) {
+            addressRepository.findByUserIdAndDefaultAddressTrue(addressRequest.getUserId())
                     .ifPresent(defaultAddress -> {
-                        defaultAddress.setDefault(false);
+                        defaultAddress.setDefaultAddress(false);
                         addressRepository.save(defaultAddress);
                     });
+            log.info("Default address is found for user with id {} and set the old address as default false", addressRequest.getUserId());
         }
         Address savedAddress = addressRepository.save(address);
         log.info("Address created: {}", savedAddress.getId());
@@ -75,10 +76,10 @@ public class AddressServiceImpl implements AddressService {
         User user = userRepository.findById(addressRequest.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with Id: " + addressRequest.getUserId()));
         validateUser(user);
-        if ( !address.isDefault() && addressRequest.isDefault() ) {
-            addressRepository.findByUserIdAndIsDefaultTrue(addressRequest.getUserId())
+        if ( !address.isDefaultAddress() && addressRequest.isDefaultAddress() ) {
+            addressRepository.findByUserIdAndDefaultAddressTrue(addressRequest.getUserId())
                     .ifPresent(defaultAddress -> {
-                        defaultAddress.setDefault(false);
+                        defaultAddress.setDefaultAddress(false);
                         addressRepository.save(defaultAddress);
                     });
         }

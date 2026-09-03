@@ -35,7 +35,7 @@ public class AddressResponse {
 
     private String postalCode;
 
-    private boolean isDefault;
+    private boolean defaultAddress;
 
     private Instant createdAt;
 

@@ -14,7 +14,7 @@ public interface AddressRepository extends MongoRepository<Address, String> {
 
     Page<Address> findAllByUserId( String userId, Pageable pageable );
 
-    Optional<Address> findByUserIdAndIsDefaultTrue( String userId);
+    Optional<Address> findByUserIdAndDefaultAddressTrue( String userId);
 
     Optional<Address> findByIdAndUserId( String id, String userId );
 }

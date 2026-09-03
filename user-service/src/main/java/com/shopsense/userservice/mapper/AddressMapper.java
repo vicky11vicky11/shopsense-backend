@@ -11,9 +11,9 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AddressMapper {
 
-    @Mapping(target = "id",ignore = true)
-    @Mapping(target = "createdAt",ignore = true)
-    @Mapping(target = "updatedAt",ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     Address toEntity( AddressRequest addressRequest );
 
     AddressResponse toResponse( Address address );
@@ -22,8 +22,5 @@ public interface AddressMapper {
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateEntity(
-            AddressRequest addressRequest,
-            @MappingTarget Address address
-    );
+    void updateEntity( AddressRequest addressRequest, @MappingTarget Address address );
 }

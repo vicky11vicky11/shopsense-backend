@@ -41,6 +41,6 @@ public class AddressRequest {
     @NotBlank(message = "Postal code is required")
     private String postalCode;
 
-    @NotNull(message = "Default address is required")
-    private boolean isDefault;
+    @NotNull(message = "Default address value is required")
+    private boolean defaultAddress;
 }
