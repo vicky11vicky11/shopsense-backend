@@ -1,33 +1,33 @@
 info:
-  app:
-    name: ${spring.application.name}
-    description: Eureka Service to register multiple instances in a common name
-    version: 1.0.0
+    app:
+        name: ${spring.application.name}
+        description: Eureka Service to register multiple instances in a common name
+        version: 1.0.0
 server:
-  port: 8761
+    port: 8761
 spring:
-  application:
-    name: eureka-service
+    application:
+        name: eureka-service
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,env,metrics
-  endpoint:
-    health:
-      show-details: always
-  info:
-    env:
-      enabled: true
+    endpoints:
+        web:
+            exposure:
+                include: health,info,env,metrics
+    endpoint:
+        health:
+            show-details: always
+    info:
+        env:
+            enabled: true
 eureka:
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port}
-    lease-renewal-interval-in-seconds: 30
-    lease-expiration-duration-in-seconds: 90
-  client:
-    fetch-registry: false
-    register-with-eureka: false
-  server:
-    enable-self-preservation: false
-    eviction-interval-timer-in-ms: 5000
+    instance:
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${server.port}
+        lease-renewal-interval-in-seconds: 30
+        lease-expiration-duration-in-seconds: 90
+    client:
+        fetch-registry: false
+        register-with-eureka: false
+    server:
+        enable-self-preservation: false
+        eviction-interval-timer-in-ms: 5000
