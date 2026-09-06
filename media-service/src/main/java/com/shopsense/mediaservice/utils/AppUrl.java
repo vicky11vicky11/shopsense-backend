@@ -6,5 +6,5 @@ public class AppUrl {
 
     private static final String BASE_URL = "/api/v1";
 
-    public static final String CLOUDINARY_MEDIA_URL = BASE_URL + "/cloudinary";
+    public static final String MEDIA_URL = BASE_URL + "/media";
 }

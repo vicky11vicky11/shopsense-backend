@@ -11,4 +11,5 @@ public class MediaUpdateRequest {
 
     @NotNull(message = "Image is required")
     private MultipartFile image;
+
 }
