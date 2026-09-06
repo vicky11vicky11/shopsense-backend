@@ -1,45 +1,98 @@
 services:
-  mongodb:
-    container_name: mongodb
-    image: mongo:8.3.8
-    restart: on-failure
-    tty: true
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
-      MONGO_INITDB_DATABASE: user_service
-      GLIBC_TUNABLES: "glibc.pthread.rseq=1"
-    volumes:
-      - /home/vicky/Projects/ShopSense/data/mongodb:/data/db
-    networks:
-      - dev_network
-    healthcheck:
-      test: [ "CMD-SHELL", "mongosh --eval 'db.adminCommand({ ping: 1 })' --username user --password user --authenticationDatabase admin || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-  mysql:
-    container_name: mysql
-    image: mysql:latest
-    restart: on-failure
-    tty: true
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-    volumes:
-      - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql
-    networks:
-      - dev_network
-    healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -u root -proot" ]
-      interval: 5s
-      timeout: 5s
-      retries: 50
-networks:
-  dev_network:
-    driver: bridge
+    mongodb:
+        container_name: mongodb
+        image: mongo:8.3.8
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "27017:27017"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root
+            MONGO_INITDB_DATABASE: user_service
+            GLIBC_TUNABLES: "glibc.pthread.rseq=1"
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/mongodb:/data/db:z
+        networks:
+            - dev_network
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "mongosh --username root --password root --authenticationDatabase admin --eval 'db.adminCommand({ ping: 1 })' || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
 
+    mysql-cleanup:
+        image: busybox:latest
+        container_name: mysql-cleanup
+        command: >
+            sh -c "
+            rm -f /var/lib/mysql/mysql.sock &&
+            rm -f /var/lib/mysql/mysql.sock.lock
+            "
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
+        restart: "no"
+
+    mysql:
+        container_name: mysql
+        image: mysql:8.4
+        restart: unless-stopped
+        tty: true
+
+        depends_on:
+            mysql-cleanup:
+                condition: service_completed_successfully
+
+        ports:
+            - "3306:3306"
+
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: product_service
+            GLIBC_TUNABLES: "glibc.pthread.rseq=1"
+
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
+
+        networks:
+            - dev_network
+
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "mysqladmin ping -h 127.0.0.1 -u root -proot --silent || exit 1"
+              ]
+            interval: 5s
+            timeout: 5s
+            retries: 50
+            start_period: 20s
+    postgres:
+        container_name: postgres
+        image: postgres:18
+        restart: on-failure
+        tty: true
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: root
+            POSTGRES_DB: order_service
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/postgres:/var/lib/postgresql:z
+        networks:
+            - dev_network
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U root -d order_service" ]
+            interval: 5s
+            timeout: 5s
+            retries: 50
+
+networks:
+    dev_network:
+        driver: bridge
