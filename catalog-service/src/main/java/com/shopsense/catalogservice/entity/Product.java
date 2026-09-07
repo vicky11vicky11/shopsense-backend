@@ -45,7 +45,7 @@ public class Product {
     private BigDecimal price;
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
     private boolean active = true;
 
     @CreationTimestamp

@@ -23,14 +23,14 @@ public class Brand {
     private UUID id;
 
     @Column(nullable = false)
-    private String name;
+    private String brandName;
 
-    private String description;
+    private String brandDescription;
 
     private String brandImageId;
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
     private boolean active = true;
 
     @CreationTimestamp

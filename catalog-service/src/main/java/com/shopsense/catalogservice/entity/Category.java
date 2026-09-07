@@ -34,7 +34,7 @@ public class Category {
     private Category parentCategory;
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
     private boolean active = true;
 
     @CreationTimestamp
