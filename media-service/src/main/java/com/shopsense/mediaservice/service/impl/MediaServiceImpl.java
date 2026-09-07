@@ -206,10 +206,12 @@ public class MediaServiceImpl implements MediaService {
 
     private String resolveFolder( MediaType mediaType ) {
         return switch ( mediaType ) {
-            case USER_PROFILE -> "shopsense/users";
+            case USER -> "shopsense/users";
             case PRODUCT -> "shopsense/products";
             case CATEGORY -> "shopsense/categories";
             case REVIEW -> "shopsense/reviews";
+            case STORE -> "shopsense/stores";
+            case BRAND -> "shopsense/brands";
         };
     }
 

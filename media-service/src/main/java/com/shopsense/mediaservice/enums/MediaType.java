@@ -1,7 +1,9 @@
 package com.shopsense.mediaservice.enums;
 
 public enum MediaType {
-    USER_PROFILE,
+    USER,
+    STORE,
+    BRAND,
     PRODUCT,
     CATEGORY,
     REVIEW;

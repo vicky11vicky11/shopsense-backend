@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -75,6 +76,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MediaUploadException.class)
     public ProblemDetail handleMediaUploadException( MediaUploadException ex ) {
         return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Media Operation Failed", "Unable to complete the media operation");
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleHttpRequestMethodNotSupportedException( HttpRequestMethodNotSupportedException ex ) {
+        return buildProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, "Method Not Allowed", "The requested HTTP method is not allowed for this resource");
     }
 
     @ExceptionHandler(RuntimeException.class)
