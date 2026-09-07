@@ -1,0 +1,43 @@
+info:
+    app:
+        name: ${spring.application.name}
+        description: Catalog Service to perform operations related to catalogs
+        version: 1.0.0
+server:
+    port: 8082
+spring:
+    application:
+        name: catalog-service
+    jackson:
+        deserialization:
+            fail-on-unknown-properties: true
+    datasource:
+        url: jdbc:mysql://localhost:3306/product_service
+        username: root
+        password: root
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info,metrics
+    endpoint:
+        health:
+            show-details: always
+    info:
+        env:
+            enabled: true
+eureka:
+    instance:
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${server.port}
+        lease-renewal-interval-in-seconds: 30
+        lease-expiration-duration-in-seconds: 90
+    client:
+        service-url:
+            defaultZone: http://localhost:8761/eureka/
+        register-with-eureka: true
+        fetch-registry: true
