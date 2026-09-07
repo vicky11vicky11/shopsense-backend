@@ -25,4 +25,6 @@ public class UserRequest {
     @Pattern(message = "Phone is invalid", regexp = "^[0-9]{10}$")
     private String phone;
 
+    private String profileImageId;
+
 }

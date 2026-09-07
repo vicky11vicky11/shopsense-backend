@@ -97,6 +97,10 @@ public class UserServiceImpl implements UserService {
                 .equals(userRequest.getLastName()) ) {
             user.setLastName(userRequest.getLastName());
         }
+        if ( !user.getProfileImageId()
+                .equals(userRequest.getProfileImageId()) ) {
+            user.setProfileImageId(userRequest.getProfileImageId());
+        }
         User savedUser = userRepository.save(user);
         log.info("Updated user with id {}", id);
         return userMapper.toResponse(savedUser);
@@ -107,6 +111,9 @@ public class UserServiceImpl implements UserService {
     public void deleteUser( String id ) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by id : " + id));
+        if ( user.getStatus() == UserStatus.DELETED ) {
+            throw new ResourceNotFoundException("User not found by id : " + id);
+        }
         user.setStatus(UserStatus.DELETED);
         userRepository.save(user);
         log.info("Deleted user with id {}", id);
@@ -118,6 +125,7 @@ public class UserServiceImpl implements UserService {
         user.setEmailVerified(false);
         user.setPhoneVerified(false);
         user.setStatus(UserStatus.ACTIVE);
+        user.setProfileImageId(userRequest.getProfileImageId());
         User savedUser = userRepository.save(user);
         log.info("Created user with id {} and role {}", savedUser.getId(), savedUser.getRole());
         return userMapper.toResponse(savedUser);

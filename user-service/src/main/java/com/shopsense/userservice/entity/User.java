@@ -41,6 +41,8 @@ public class User {
 
     private boolean phoneVerified;
 
+    private String profileImageId;
+
     @CreatedDate
     private Instant createdAt;
 

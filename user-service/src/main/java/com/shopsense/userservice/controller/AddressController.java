@@ -28,7 +28,7 @@ public class AddressController {
                 .body(addressResponse);
     }
 
-    @GetMapping("/all/{userId}")
+    @GetMapping("/bulk/{userId}")
     public ResponseEntity<PageResponse<AddressResponse>> getAllAddresses( @PathVariable String userId, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
         PageResponse<AddressResponse> addressResponses = addressService.getAllAddresses(userId, pageable);
         return ResponseEntity.ok(addressResponses);

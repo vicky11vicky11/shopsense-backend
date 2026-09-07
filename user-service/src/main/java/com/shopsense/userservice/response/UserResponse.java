@@ -33,6 +33,8 @@ public class UserResponse {
 
     private boolean phoneVerified;
 
+    private String profileImageId;
+
     private Instant createdAt;
     
     private Instant updatedAt;

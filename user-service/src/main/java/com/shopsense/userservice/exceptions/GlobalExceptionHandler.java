@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -121,6 +122,10 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.FORBIDDEN, "User Account Suspended", ex.getMessage());
     }
 
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleHttpRequestMethodNotSupportedException( HttpRequestMethodNotSupportedException ex ) {
+        return buildProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, "Method Not Allowed", "The requested HTTP method is not allowed for this resource");
+    }
     @ExceptionHandler(RuntimeException.class)
     public ProblemDetail handleRuntimeException( RuntimeException ex ) {
         return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage());
@@ -130,7 +135,6 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleException( Exception ex ) {
         return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage());
     }
-
 
     private ProblemDetail buildProblemDetail( HttpStatus status, String title, String detail ) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);

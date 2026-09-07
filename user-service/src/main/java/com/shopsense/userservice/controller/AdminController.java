@@ -35,7 +35,7 @@ public class AdminController {
         return ResponseEntity.ok(userResponse);
     }
 
-    @GetMapping("/users")
+    @GetMapping("/bulk")
     public ResponseEntity<PageResponse<UserResponse>> getAllUsers( @RequestParam(required = false) UserRole role, @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
         PageResponse<UserResponse> userResponses = userService.getAllUsersByRole(role, pageable);
         return ResponseEntity.ok(userResponses);
