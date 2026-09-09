@@ -5,7 +5,7 @@ import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
 import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.StoreMapper;
 import com.shopsense.catalogservice.repository.StoreRepository;
-import com.shopsense.catalogservice.request.CreateStoreRequest;
+import com.shopsense.catalogservice.request.StoreRequest;
 import com.shopsense.catalogservice.request.UpdateStoreRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.StoreResponse;
@@ -30,7 +30,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     @Transactional
-    public StoreResponse createStore( CreateStoreRequest request ) {
+    public StoreResponse createStore( StoreRequest request ) {
         boolean exists = storeRepository.existsBySellerIdAndAddressId(request.getSellerId(), request.getAddressId());
         if ( exists ) {
             throw new ResourceAlreadyExistsException("Store already exists for this seller and address");

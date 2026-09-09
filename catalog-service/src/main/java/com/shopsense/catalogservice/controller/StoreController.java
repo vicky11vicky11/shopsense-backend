@@ -1,6 +1,6 @@
 package com.shopsense.catalogservice.controller;
 
-import com.shopsense.catalogservice.request.CreateStoreRequest;
+import com.shopsense.catalogservice.request.StoreRequest;
 import com.shopsense.catalogservice.request.UpdateStoreRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.StoreResponse;
@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,7 +25,7 @@ public class StoreController {
     private final StoreService storeService;
 
     @PostMapping
-    public ResponseEntity<StoreResponse> createStore( @Valid @RequestBody CreateStoreRequest request ) {
+    public ResponseEntity<StoreResponse> createStore( @Valid @RequestBody StoreRequest request ) {
         StoreResponse response = storeService.createStore(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);

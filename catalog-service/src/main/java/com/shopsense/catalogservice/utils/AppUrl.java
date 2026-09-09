@@ -10,6 +10,5 @@ public class AppUrl {
     public static final String CATEGORY_URL = BASE_URL + "/categories";
     public static final String BRAND_URL = BASE_URL + "/brands";
     public static final String STORE_URL = BASE_URL + "/stores";
-    public static final String INVENTORY_URL = BASE_URL + "/inventories";
 
 }

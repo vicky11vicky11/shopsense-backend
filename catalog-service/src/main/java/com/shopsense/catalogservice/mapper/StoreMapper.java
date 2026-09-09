@@ -1,7 +1,7 @@
 package com.shopsense.catalogservice.mapper;
 
 import com.shopsense.catalogservice.entity.Store;
-import com.shopsense.catalogservice.request.CreateStoreRequest;
+import com.shopsense.catalogservice.request.StoreRequest;
 import com.shopsense.catalogservice.response.StoreResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,7 +14,7 @@ public interface StoreMapper {
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    Store toEntity( CreateStoreRequest request );
+    Store toEntity( StoreRequest request );
 
     StoreResponse toResponse( Store store );
 

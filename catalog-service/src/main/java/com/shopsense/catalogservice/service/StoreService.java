@@ -1,6 +1,6 @@
 package com.shopsense.catalogservice.service;
 
-import com.shopsense.catalogservice.request.CreateStoreRequest;
+import com.shopsense.catalogservice.request.StoreRequest;
 import com.shopsense.catalogservice.request.UpdateStoreRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.StoreResponse;
@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface StoreService {
 
-    StoreResponse createStore( CreateStoreRequest request );
+    StoreResponse createStore( StoreRequest request );
 
     StoreResponse getStoreById( UUID storeId );
 

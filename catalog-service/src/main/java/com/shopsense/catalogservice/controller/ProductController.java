@@ -24,163 +24,71 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(
-            @Valid @RequestBody ProductRequest request
-    ) {
+    public ResponseEntity<ProductResponse> createProduct( @Valid @RequestBody ProductRequest request ) {
+        ProductResponse productResponse = productService.createProduct(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productResponse);
+    }
 
-        ProductResponse response =
-                productService.createProduct(request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+    @GetMapping("/bulk")
+    public ResponseEntity<PageResponse<ProductResponse>> getAllProducts( @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+        PageResponse<ProductResponse> productResponse = productService.getAllProducts(pageable);
+        return ResponseEntity.ok(productResponse);
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductResponse> getProductById(
-            @PathVariable UUID productId
-    ) {
-
-        return ResponseEntity.ok(
-                productService.getProductById(productId)
-        );
-    }
-
-    @GetMapping
-    public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
-            @PageableDefault(
-                    size = 10,
-                    page = 0,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable
-    ) {
-
-        return ResponseEntity.ok(
-                productService.getAllProducts(pageable)
-        );
+    public ResponseEntity<ProductResponse> getProductById( @PathVariable UUID productId ) {
+        ProductResponse productResponse = productService.getProductById(productId);
+        return ResponseEntity.ok(productResponse);
     }
 
     @GetMapping("/store/{storeId}")
-    public ResponseEntity<PageResponse<ProductResponse>> getProductsByStore(
-            @PathVariable UUID storeId,
-            @PageableDefault(
-                    size = 10,
-                    page = 0,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable
-    ) {
-
-        return ResponseEntity.ok(
-                productService.getProductsByStoreId(
-                        storeId,
-                        pageable
-                )
-        );
+    public ResponseEntity<PageResponse<ProductResponse>> getProductsByStore( @PathVariable UUID storeId, @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+        PageResponse<ProductResponse> productResponse = productService.getProductsByStoreId(storeId, pageable);
+        return ResponseEntity.ok(productResponse);
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<PageResponse<ProductResponse>> getProductsByCategory(
-            @PathVariable UUID categoryId,
-            @PageableDefault(
-                    size = 10,
-                    page = 0,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable
-    ) {
-
-        return ResponseEntity.ok(
-                productService.getProductsByCategoryId(
-                        categoryId,
-                        pageable
-                )
-        );
+    public ResponseEntity<PageResponse<ProductResponse>> getProductsByCategory( @PathVariable UUID categoryId, @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+        PageResponse<ProductResponse> productResponse = productService.getProductsByCategoryId(categoryId, pageable);
+        return ResponseEntity.ok(productResponse);
     }
 
     @GetMapping("/brand/{brandId}")
-    public ResponseEntity<PageResponse<ProductResponse>> getProductsByBrand(
-            @PathVariable UUID brandId,
-            @PageableDefault(
-                    size = 10,
-                    page = 0,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable
-    ) {
-
-        return ResponseEntity.ok(
-                productService.getProductsByBrandId(
-                        brandId,
-                        pageable
-                )
-        );
+    public ResponseEntity<PageResponse<ProductResponse>> getProductsByBrand( @PathVariable UUID brandId, @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+        PageResponse<ProductResponse> productResponse = productService.getProductsByBrandId(brandId, pageable);
+        return ResponseEntity.ok(productResponse);
     }
 
     @GetMapping("/active")
-    public ResponseEntity<PageResponse<ProductResponse>> getActiveProducts(
-            @PageableDefault(
-                    size = 10,
-                    page = 0,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable
-    ) {
-
-        return ResponseEntity.ok(
-                productService.getActiveProducts(pageable)
-        );
+    public ResponseEntity<PageResponse<ProductResponse>> getActiveProducts( @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+        PageResponse<ProductResponse> productResponse = productService.getActiveProducts(pageable);
+        return ResponseEntity.ok(productResponse);
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<ProductResponse> updateProduct(
-            @PathVariable UUID productId,
-            @Valid @RequestBody ProductRequest request
-    ) {
-
-        return ResponseEntity.ok(
-                productService.updateProduct(
-                        productId,
-                        request
-                )
-        );
+    public ResponseEntity<ProductResponse> updateProduct( @PathVariable UUID productId, @Valid @RequestBody ProductRequest request ) {
+        ProductResponse productResponse = productService.updateProduct(productId, request);
+        return ResponseEntity.ok(productResponse);
     }
 
     @PatchMapping("/{productId}/activate")
-    public ResponseEntity<Void> activateProduct(
-            @PathVariable UUID productId
-    ) {
-
+    public ResponseEntity<Void> activateProduct( @PathVariable UUID productId ) {
         productService.activateProduct(productId);
-
         return ResponseEntity.noContent()
                 .build();
     }
 
     @PatchMapping("/{productId}/deactivate")
-    public ResponseEntity<Void> deactivateProduct(
-            @PathVariable UUID productId
-    ) {
-
+    public ResponseEntity<Void> deactivateProduct( @PathVariable UUID productId ) {
         productService.deactivateProduct(productId);
-
         return ResponseEntity.noContent()
                 .build();
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(
-            @PathVariable UUID productId
-    ) {
-
+    public ResponseEntity<Void> deleteProduct( @PathVariable UUID productId ) {
         productService.deleteProduct(productId);
-
         return ResponseEntity.noContent()
                 .build();
     }

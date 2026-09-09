@@ -24,6 +24,7 @@ public interface ProductMapper {
     @Mapping(target = "store", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "brand", ignore = true)
+    @Mapping(target = "active", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntity( ProductRequest request, @MappingTarget Product product );

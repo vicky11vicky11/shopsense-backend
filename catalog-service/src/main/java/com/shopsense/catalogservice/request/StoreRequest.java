@@ -7,7 +7,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateStoreRequest {
+public class StoreRequest {
 
     @NotBlank
     private String sellerId;
