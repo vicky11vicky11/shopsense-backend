@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -23,23 +24,34 @@ public class ProductInformationController {
 
     @PostMapping
     public ResponseEntity<ProductInformationResponse> create( @PathVariable UUID productId, @Valid @RequestBody ProductInformationRequest request ) {
+        ProductInformationResponse productInformationResponse = productInformationService.create(productId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(productInformationService.create(productId, request));
+                .body(productInformationResponse);
     }
 
-    @GetMapping
+    @PostMapping("/bulk")
+    public ResponseEntity<List<ProductInformationResponse>> bulkCreate( @PathVariable UUID productId, @Valid @RequestBody List<@Valid ProductInformationRequest> requests ) {
+        List<ProductInformationResponse> productInformationResponses = productInformationService.bulkCreate(productId, requests);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productInformationResponses);
+    }
+
+    @GetMapping("/bulk")
     public ResponseEntity<PageResponse<ProductInformationResponse>> getByProductId( @PathVariable UUID productId, Pageable pageable ) {
-        return ResponseEntity.ok(productInformationService.getByProductId(productId, pageable));
+        PageResponse<ProductInformationResponse> productInformationResponse = productInformationService.getByProductId(productId, pageable);
+        return ResponseEntity.ok(productInformationResponse);
     }
 
     @GetMapping("/{productInformationId}")
     public ResponseEntity<ProductInformationResponse> getById( @PathVariable UUID productId, @PathVariable UUID productInformationId ) {
-        return ResponseEntity.ok(productInformationService.getById(productId, productInformationId));
+        ProductInformationResponse productInformationResponse = productInformationService.getById(productId, productInformationId);
+        return ResponseEntity.ok(productInformationResponse);
     }
 
     @PutMapping("/{productInformationId}")
     public ResponseEntity<ProductInformationResponse> update( @PathVariable UUID productId, @PathVariable UUID productInformationId, @Valid @RequestBody ProductInformationRequest request ) {
-        return ResponseEntity.ok(productInformationService.update(productId, productInformationId, request));
+        ProductInformationResponse productInformationResponse = productInformationService.update(productId, productInformationId, request);
+        return ResponseEntity.ok(productInformationResponse);
     }
 
     @DeleteMapping("/{productInformationId}")

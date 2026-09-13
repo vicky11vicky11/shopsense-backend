@@ -13,6 +13,7 @@ public interface ProductMediaMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "displayOrder", ignore = true)
     ProductMedia toEntity( ProductMediaRequest request );
 
     @Mapping(target = "productId", source = "product.id")
@@ -20,6 +21,6 @@ public interface ProductMediaMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "displayOrder", ignore = true)
     void updateEntity( ProductMediaRequest request, @MappingTarget ProductMedia productMedia );
-
 }

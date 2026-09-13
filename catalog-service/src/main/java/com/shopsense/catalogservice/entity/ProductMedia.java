@@ -11,8 +11,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "product_media", uniqueConstraints = { @UniqueConstraint(name = "uk_product_media", columnNames = { "product_id", "media_id" }) })
+    @Entity
+@Table(name = "product_media", uniqueConstraints = { @UniqueConstraint(name = "uk_product_media", columnNames = { "product_id", "media_id" }), @UniqueConstraint(name = "uk_product_media_display_order", columnNames = { "product_id", "display_order" }) })
 public class ProductMedia {
 
     @Id
@@ -30,5 +30,6 @@ public class ProductMedia {
     private Integer displayOrder = 0;
 
     @Builder.Default
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private boolean primaryImage = false;
 }

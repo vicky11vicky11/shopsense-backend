@@ -84,6 +84,11 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.BAD_REQUEST, "Invalid Request Parameter", detail);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgumentException( IllegalArgumentException ex ) {
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Invalid Request Parameter", ex.getMessage());
+    }
+
     @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
     public ProblemDetail handleInvalidDataAccessResourceUsageException( InvalidDataAccessResourceUsageException ex ) {
         return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Database Not Found", "An error occurred while accessing the database");
@@ -121,7 +126,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleException( Exception ex ) {
-        return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An unexpected error occurred");
+        return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage());
     }
 
     private ProblemDetail buildProblemDetail( HttpStatus status, String title, String detail ) {

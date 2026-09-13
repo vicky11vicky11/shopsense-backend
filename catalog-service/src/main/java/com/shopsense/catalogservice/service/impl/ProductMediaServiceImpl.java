@@ -11,7 +11,6 @@ import com.shopsense.catalogservice.request.ProductMediaRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.ProductMediaResponse;
 import com.shopsense.catalogservice.service.ProductMediaService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -46,20 +44,22 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         if ( request.isPrimaryImage() ) {
             unsetCurrentPrimaryImage(productId);
         }
+        int nextDisplayOrder = productMediaRepository.findMaxDisplayOrderByProductId(productId) + 1;
         ProductMedia productMedia = productMediaMapper.toEntity(request);
         productMedia.setProduct(product);
+        productMedia.setDisplayOrder(nextDisplayOrder);
         ProductMedia saved = productMediaRepository.save(productMedia);
-        log.info("Product media created successfully: id={}, productId={}", saved.getId(), productId);
+        log.info("Product media created successfully: id={}, productId={}, displayOrder={}", saved.getId(), productId, saved.getDisplayOrder());
         return productMediaMapper.toResponse(saved);
     }
 
     @Override
     public List<ProductMediaResponse> createBulk( UUID productId, List<ProductMediaRequest> requests ) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
-        if ( requests.isEmpty() ) {
+        if ( requests == null || requests.isEmpty() ) {
             throw new IllegalArgumentException("At least one product media is required");
         }
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
         List<String> mediaIds = requests.stream()
                 .map(ProductMediaRequest::getMediaId)
                 .toList();
@@ -83,13 +83,15 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         if ( primaryCount == 1 ) {
             unsetCurrentPrimaryImage(productId);
         }
-        List<ProductMedia> productMediaList = requests.stream()
-                .map(request -> {
-                    ProductMedia productMedia = productMediaMapper.toEntity(request);
-                    productMedia.setProduct(product);
-                    return productMedia;
-                })
-                .toList();
+        int nextDisplayOrder = productMediaRepository.findMaxDisplayOrderByProductId(productId) + 1;
+        List<ProductMedia> productMediaList = new java.util.ArrayList<>();
+        for ( ProductMediaRequest request : requests ) {
+            ProductMedia productMedia = productMediaMapper.toEntity(request);
+            productMedia.setProduct(productMedia.getProduct());
+            productMedia.setProduct(product);
+            productMedia.setDisplayOrder(nextDisplayOrder++);
+            productMediaList.add(productMedia);
+        }
         List<ProductMedia> saved = productMediaRepository.saveAll(productMediaList);
         log.info("Product media created successfully in bulk: productId={}, count={}", productId, saved.size());
         return saved.stream()
@@ -118,26 +120,40 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     @Override
     public ProductMediaResponse update( UUID productId, UUID productMediaId, ProductMediaRequest request ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);
-        boolean exists = productMediaRepository.existsByProductIdAndMediaId(productId, request.getMediaId());
         if ( !productMedia.getMediaId()
-                .equals(request.getMediaId()) && exists ) {
-            throw new ResourceAlreadyExistsException("Media already exists for this product");
+                .equals(request.getMediaId()) ) {
+            boolean exists = productMediaRepository.existsByProductIdAndMediaId(productId, request.getMediaId());
+            if ( exists ) {
+                throw new ResourceAlreadyExistsException("Media already exists for this product");
+            }
+        }
+        if ( !productMedia.getDisplayOrder()
+                .equals(request.getDisplayOrder()) ) {
+            updateDisplayOrder(productId, productMedia, request.getDisplayOrder());
         }
         if ( request.isPrimaryImage() && !productMedia.isPrimaryImage() ) {
             unsetCurrentPrimaryImage(productId);
         }
         productMediaMapper.updateEntity(request, productMedia);
         ProductMedia updated = productMediaRepository.save(productMedia);
-        log.info("Product media updated successfully: productMediaId={}", productMediaId);
+        log.info("Product media updated successfully: productMediaId={}, productId={}", productMediaId, productId);
         return productMediaMapper.toResponse(updated);
     }
 
     @Override
     public void delete( UUID productId, UUID productMediaId ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);
+        if ( productMedia.isPrimaryImage() ) {
+            productMediaRepository.findFirstByProductIdAndIdNotOrderByDisplayOrderAsc(productId, productMediaId)
+                    .ifPresent(otherMedia -> {
+                        otherMedia.setPrimaryImage(true);
+                        log.info("Primary image reassigned: productId={}, newPrimaryMediaId={}", productId, otherMedia.getId());
+                    });
+        }
         productMediaRepository.delete(productMedia);
         log.info("Product media deleted successfully: productMediaId={}", productMediaId);
     }
+
 
     @Override
     public ProductMediaResponse setPrimaryImage( UUID productId, UUID productMediaId ) {
@@ -167,5 +183,23 @@ public class ProductMediaServiceImpl implements ProductMediaService {
                 .ifPresent(currentPrimary -> {
                     currentPrimary.setPrimaryImage(false);
                 });
+    }
+
+    private void updateDisplayOrder( UUID productId, ProductMedia productMedia, Integer newOrder ) {
+        Integer oldOrder = productMedia.getDisplayOrder();
+        if ( newOrder == null ) {
+            throw new IllegalArgumentException("Display order cannot be null");
+        }
+        if ( newOrder < 0 ) {
+            throw new IllegalArgumentException("Display order cannot be negative");
+        }
+        productMedia.setDisplayOrder(Integer.MIN_VALUE);
+        productMediaRepository.saveAndFlush(productMedia);
+        if ( newOrder < oldOrder ) {
+            productMediaRepository.incrementDisplayOrders(productId, newOrder, oldOrder);
+        } else {
+            productMediaRepository.decrementDisplayOrders(productId, oldOrder, newOrder);
+        }
+        productMedia.setDisplayOrder(newOrder);
     }
 }

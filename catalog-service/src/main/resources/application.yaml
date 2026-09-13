@@ -5,25 +5,47 @@ info:
         version: 1.0.0
 server:
     port: 8082
+    shutdown: graceful
+    tomcat:
+        threads:
+            max: 200
+            min-spare: 20
+        connection-timeout: 5s
+        max-connections: 10000
+        max-keep-alive-requests: 500
+        accept-count: 200
+        keep-alive-timeout: 20s
 spring:
     application:
         name: catalog-service
     jackson:
         deserialization:
             fail-on-unknown-properties: true
+    lifecycle:
+        timeout-per-shutdown-phase: 30s
     datasource:
         url: jdbc:mysql://localhost:3306/catalog_service
         username: root
         password: root
         driver-class-name: com.mysql.cj.jdbc.Driver
+        hikari:
+            maximum-pool-size: 50
+            minimum-idle: 10
+            connection-timeout: 3000
+            idle-timeout: 600000
+            max-lifetime: 1800000
+            leak-detection-threshold: 60000
+            pool-name: CatalogHikariPool
+
     jpa:
         hibernate:
             ddl-auto: update
+        open-in-view: false
 management:
     endpoints:
         web:
             exposure:
-                include: health,info,metrics
+                include: health,info,metrics,env
     endpoint:
         health:
             show-details: always
