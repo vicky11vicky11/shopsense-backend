@@ -18,6 +18,10 @@ spring:
             fail-on-unknown-properties: true
     lifecycle:
         timeout-per-shutdown-phase: 30s
+    sql:
+      init:
+          mode: always
+          schema-locations: classpath:db/schema.sql
     datasource:
         url: ${INVENTORY_POSTGRES_URL}
         username: ${POSTGRES_USERNAME}
