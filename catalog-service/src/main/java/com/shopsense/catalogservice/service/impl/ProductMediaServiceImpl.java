@@ -35,6 +35,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     private final ProductMediaMapper productMediaMapper;
 
     @Override
+    @Transactional
     public ProductMediaResponse create( UUID productId, ProductMediaRequest request ) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
@@ -54,6 +55,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     }
 
     @Override
+    @Transactional
     public List<ProductMediaResponse> createBulk( UUID productId, List<ProductMediaRequest> requests ) {
         if ( requests == null || requests.isEmpty() ) {
             throw new IllegalArgumentException("At least one product media is required");
@@ -118,6 +120,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     }
 
     @Override
+    @Transactional
     public ProductMediaResponse update( UUID productId, UUID productMediaId, ProductMediaRequest request ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);
         if ( !productMedia.getMediaId()
@@ -141,6 +144,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     }
 
     @Override
+    @Transactional
     public void delete( UUID productId, UUID productMediaId ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);
         if ( productMedia.isPrimaryImage() ) {
@@ -154,8 +158,8 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         log.info("Product media deleted successfully: productMediaId={}", productMediaId);
     }
 
-
     @Override
+    @Transactional
     public ProductMediaResponse setPrimaryImage( UUID productId, UUID productMediaId ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);
         if ( !productMedia.isPrimaryImage() ) {

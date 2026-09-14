@@ -36,6 +36,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     private final ProductInformationMapper productInformationMapper;
 
     @Override
+    @Transactional
     public ProductInformationResponse create( UUID productId, ProductInformationRequest request ) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
@@ -50,6 +51,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     }
 
     @Override
+    @Transactional
     public List<ProductInformationResponse> bulkCreate( UUID productId, List<ProductInformationRequest> requests ) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
@@ -101,6 +103,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     }
 
     @Override
+    @Transactional
     public ProductInformationResponse update( UUID productId, UUID productInformationId, ProductInformationRequest request ) {
         ProductInformation productInformation = getProductInformation(productId, productInformationId);
         if ( !productInformation.getAttributeName()
@@ -114,6 +117,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     }
 
     @Override
+    @Transactional
     public void delete( UUID productId, UUID productInformationId ) {
         ProductInformation productInformation = getProductInformation(productId, productInformationId);
         productInformationRepository.delete(productInformation);
