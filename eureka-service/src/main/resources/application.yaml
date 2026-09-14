@@ -5,9 +5,12 @@ info:
         version: 1.0.0
 server:
     port: 8761
+    shutdown: graceful
 spring:
     application:
         name: eureka-service
+    lifecycle:
+        timeout-per-shutdown-phase: 30s
 management:
     endpoints:
         web:
@@ -30,4 +33,4 @@ eureka:
         register-with-eureka: false
     server:
         enable-self-preservation: false
-        eviction-interval-timer-in-ms: 5000
+        eviction-interval-timer-in-ms: 60000

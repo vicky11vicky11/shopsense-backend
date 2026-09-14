@@ -6,37 +6,23 @@ info:
 server:
     port: 8082
     shutdown: graceful
-    tomcat:
-        threads:
-            max: 200
-            min-spare: 20
-        connection-timeout: 5s
-        max-connections: 10000
-        max-keep-alive-requests: 500
-        accept-count: 200
-        keep-alive-timeout: 20s
 spring:
     application:
         name: catalog-service
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 20MB
     jackson:
         deserialization:
             fail-on-unknown-properties: true
     lifecycle:
         timeout-per-shutdown-phase: 30s
     datasource:
-        url: jdbc:mysql://localhost:3306/catalog_service
-        username: root
-        password: root
+        url: ${MYSQL_URL}
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
         driver-class-name: com.mysql.cj.jdbc.Driver
-        hikari:
-            maximum-pool-size: 50
-            minimum-idle: 10
-            connection-timeout: 3000
-            idle-timeout: 600000
-            max-lifetime: 1800000
-            leak-detection-threshold: 60000
-            pool-name: CatalogHikariPool
-
     jpa:
         hibernate:
             ddl-auto: update
@@ -60,6 +46,6 @@ eureka:
         lease-expiration-duration-in-seconds: 90
     client:
         service-url:
-            defaultZone: http://localhost:8761/eureka/
+            defaultZone: ${EUREKA_URL}
         register-with-eureka: true
         fetch-registry: true

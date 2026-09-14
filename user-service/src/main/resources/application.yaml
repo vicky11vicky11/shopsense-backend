@@ -5,19 +5,26 @@ info:
         version: 1.0.0
 server:
     port: 8081
+    shutdown: graceful
 spring:
     application:
         name: user-service
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 20MB
     jackson:
         deserialization:
             fail-on-unknown-properties: true
+    lifecycle:
+        timeout-per-shutdown-phase: 30s
     mongodb:
-        host: localhost
-        port: 27017
-        username: root
-        password: root
-        database: user_service
-        authentication-database: admin
+        host: ${MONGODB_HOST}
+        port: ${MONGODB_PORT}
+        username: ${MONGODB_USERNAME}
+        password: ${MONGODB_PASSWORD}
+        database: ${CATALOG_DATABASE}
+        authentication-database: ${MONGODB_AUTHENTICATION_DATABASE}
     data:
         mongodb:
             auto-index-creation: true
@@ -40,6 +47,6 @@ eureka:
         lease-expiration-duration-in-seconds: 90
     client:
         service-url:
-            defaultZone: http://localhost:8761/eureka/
+            defaultZone: ${EUREKA_URL}
         register-with-eureka: true
         fetch-registry: true
