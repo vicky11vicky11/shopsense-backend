@@ -1,0 +1,1026 @@
+{
+  "info": {
+    "_postman_id": "662dd292-9b2d-4524-a127-ea26872d55d6",
+    "name": "Catalog Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57740050",
+    "_collection_link": "https://go.postman.co/collection/57740050-662dd292-9b2d-4524-a127-ea26872d55d6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Store",
+      "item": [
+        {
+          "name": "Create Store",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"sellerId\": \"6a9d653ff98d4462e2661684\",\n    \"addressId\": \"6a9d63ac91a640e30bbd3f33\",\n    \"storeName\": \"First Store\",\n    \"storeImageId\": \"6a9d1c8e7b338ce4272530c4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{store-url}}",
+              "host": [
+                "{{store-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{store-url}}/01a07728-61e0-7c99-8dcc-b47000fb1f09",
+              "host": [
+                "{{store-url}}"
+              ],
+              "path": [
+                "01a07728-61e0-7c99-8dcc-b47000fb1f09"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Stores By Seller",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{store-url}}/seller/6a9d653ff98d4462e2661684",
+              "host": [
+                "{{store-url}}"
+              ],
+              "path": [
+                "seller",
+                "6a9d653ff98d4462e2661684"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Store",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"storeName\": \"First Store Pro\",\n    \"storeImageId\": \"6a9d1c8e7b338ce4272530c4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{store-url}}/01a07728-61e0-7c99-8dcc-b47000fb1f09",
+              "host": [
+                "{{store-url}}"
+              ],
+              "path": [
+                "01a07728-61e0-7c99-8dcc-b47000fb1f09"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Store",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{store-url}}/01a07728-61e0-7c99-8dcc-b47000fb1f09/deactivate",
+              "host": [
+                "{{store-url}}"
+              ],
+              "path": [
+                "01a07728-61e0-7c99-8dcc-b47000fb1f09",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Store",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{store-url}}/01a07728-61e0-7c99-8dcc-b47000fb1f09/activate",
+              "host": [
+                "{{store-url}}"
+              ],
+              "path": [
+                "01a07728-61e0-7c99-8dcc-b47000fb1f09",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Store",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{store-url}}/01a07728-61e0-7c99-8dcc-b47000fb1f09",
+              "host": [
+                "{{store-url}}"
+              ],
+              "path": [
+                "01a07728-61e0-7c99-8dcc-b47000fb1f09"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Brand",
+      "item": [
+        {
+          "name": "Create Brand",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"brandName\":\"Brand One\",\n    \"brandDescription\":\"Brand description\",\n    \"brandImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{brand-url}}",
+              "host": [
+                "{{brand-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Brand By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{brand-url}}/01a07c51-7202-7890-8cf5-5a372364af56",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "01a07c51-7202-7890-8cf5-5a372364af56"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Brands",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{brand-url}}/bulk",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "bulk"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Brands",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{brand-url}}/active",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "active"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Brand",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\":\"Brand name\",\n    \"description\":\"Brand description\",\n    \"brandImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{brand-url}}/01a07c51-7202-7890-8cf5-5a372364af56",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "01a07c51-7202-7890-8cf5-5a372364af56"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Brand",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{brand-url}}/01a07c51-7202-7890-8cf5-5a372364af56/deactivate",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "01a07c51-7202-7890-8cf5-5a372364af56",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Brand",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{brand-url}}/01a07c51-7202-7890-8cf5-5a372364af56/activate",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "01a07c51-7202-7890-8cf5-5a372364af56",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Brand",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{brand-url}}/01a07c51-7202-7890-8cf5-5a372364af56",
+              "host": [
+                "{{brand-url}}"
+              ],
+              "path": [
+                "01a07c51-7202-7890-8cf5-5a372364af56"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"categoryName\": \"Laptop\",\n    \"categoryDescription\": \"Laptop Items\",\n    \"categoryImageId\": \"6a9d1c8e7b338ce4272530c4\",\n    \"parentCategoryId\": \"01a07ca4-10f2-7863-afea-fefdb8d9a2bb\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{category-url}}",
+              "host": [
+                "{{category-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/1a07ca5-3c19-7fbf-99b6-6136827fe95a",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "1a07ca5-3c19-7fbf-99b6-6136827fe95a"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/bulk",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "bulk"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/active",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "active"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Root Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/root",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "root"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Children Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/01a07ca4-10f2-7863-afea-fefdb8d9a2bb/children",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "01a07ca4-10f2-7863-afea-fefdb8d9a2bb",
+                "children"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"categoryName\": \"Laptop\",\n    \"categoryDescription\": \"Laptop Items\",\n    \"categoryImageId\": \"6a9d1c8e7b338ce4272530c4\",\n    \"parentCategoryId\": \"01a07ca4-10f2-7863-afea-fefdb8d9a2bb\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{category-url}}/01a07ca5-3c19-7fbf-99b6-6136827fe95a",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "01a07ca5-3c19-7fbf-99b6-6136827fe95a"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Category",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/01a07ca5-3c19-7fbf-99b6-6136827fe95a/deactivate",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "01a07ca5-3c19-7fbf-99b6-6136827fe95a",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Category",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/01a07ca5-3c19-7fbf-99b6-6136827fe95a/activate",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "01a07ca5-3c19-7fbf-99b6-6136827fe95a",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{category-url}}/01a07ca5-3c19-7fbf-99b6-6136827fe95a",
+              "host": [
+                "{{category-url}}"
+              ],
+              "path": [
+                "01a07ca5-3c19-7fbf-99b6-6136827fe95a"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Product",
+      "item": [
+        {
+          "name": "Media",
+          "item": [
+            {
+              "name": "Add Media",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"mediaId\":\"6a9d1df57b338ce4272530c9\",\n    \"displayOrder\":0,\n    \"primaryImage\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Bulk Media",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n        \"mediaId\": \"6a9d1df57b338ce4272530c7\",\n        \"displayOrder\": 1,\n        \"primaryImage\": false\n    },\n    {\n        \"mediaId\": \"6a9d1c8e7b338ce4272530c4\",\n        \"displayOrder\": 2,\n        \"primaryImage\": true\n    }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media/bulk",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media",
+                    "bulk"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Media Bullk By Product",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media/bulk",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media",
+                    "bulk"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Media By Id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media/01a094b8-4ba2-7227-953b-8cde42479169",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media",
+                    "01a094b8-4ba2-7227-953b-8cde42479169"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Media",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"mediaId\":\"6a9d1df57b338ce4272530c9\",\n    \"displayOrder\":2,\n    \"primaryImage\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media/01a094b8-4ba2-7227-953b-8cde42479169",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media",
+                    "01a094b8-4ba2-7227-953b-8cde42479169"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Primary",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media/01a094b8-4ba2-7227-953b-8cde42479169/primary",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media",
+                    "01a094b8-4ba2-7227-953b-8cde42479169",
+                    "primary"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Media",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/media/01a094b8-4ba2-7227-953b-8cde42479169",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "media",
+                    "01a094b8-4ba2-7227-953b-8cde42479169"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Information",
+          "item": [
+            {
+              "name": "Create  Information",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"attributeName\":\"brand\",\n    \"attributeValue\": \"pro\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/information",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "information"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Bulk Information",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n        \"attributeName\": \"variant\",\n        \"attributeValue\": \"ultimate\"\n    },\n    {\n        \"attributeName\": \"ram\",\n        \"attributeValue\": \"16GB\"\n    }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/information/bulk",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "information",
+                    "bulk"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Bulk Information",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/information/bulk",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "information",
+                    "bulk"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Information By Id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/information/01a0950c-c17d-7e2a-b67f-5a5ccb188623",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "information",
+                    "01a0950c-c17d-7e2a-b67f-5a5ccb188623"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Product Information",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"attributeName\":\"variant\",\n    \"attributeValue\":\"normal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/information/01a0950c-c17d-7e2a-b67f-5a5ccb188623",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "information",
+                    "01a0950c-c17d-7e2a-b67f-5a5ccb188623"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Product Information",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{product-url}}/01a08723-e8f5-7415-9600-3bb9d2b16abe/information/01a0950c-c17d-7e2a-b67f-5a5ccb188623",
+                  "host": [
+                    "{{product-url}}"
+                  ],
+                  "path": [
+                    "01a08723-e8f5-7415-9600-3bb9d2b16abe",
+                    "information",
+                    "01a0950c-c17d-7e2a-b67f-5a5ccb188623"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Create  Product",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"storeId\": \"01a07c61-f6a5-7ec8-ae07-be2ad2fb9ef1\",\n    \"categoryId\": \"01a07ca4-8f9c-7419-b294-bda1ba5b7a4a\",\n    \"brandId\": \"01a07c61-ff98-7f3b-b1cd-f4bf996599b6\",\n    \"name\": \"First Product\",\n    \"description\": \"First Product Description\",\n    \"price\": 149.99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{product-url}}",
+              "host": [
+                "{{product-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/bulk",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "bulk"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/01a0871c-57c4-7ab5-a9fe-a4d3efc18a63",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "01a0871c-57c4-7ab5-a9fe-a4d3efc18a63"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Store Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/store/01a07c61-f6a5-7ec8-ae07-be2ad2fb9ef1",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "store",
+                "01a07c61-f6a5-7ec8-ae07-be2ad2fb9ef1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Category Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/category/01a07ca4-8f9c-7419-b294-bda1ba5b7a4a",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "category",
+                "01a07ca4-8f9c-7419-b294-bda1ba5b7a4a"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Brand Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/brand/01a07c61-ff98-7f3b-b1cd-f4bf996599b6",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "brand",
+                "01a07c61-ff98-7f3b-b1cd-f4bf996599b6"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/active",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "active"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"storeId\": \"01a07c61-f6a5-7ec8-ae07-be2ad2fb9ef1\",\n    \"categoryId\": \"01a07ca4-8f9c-7419-b294-bda1ba5b7a4a\",\n    \"brandId\": \"01a07c61-ff98-7f3b-b1cd-f4bf996599b6\",\n    \"name\": \"First Product\",\n    \"description\": \"First Product Description\",\n    \"price\": 99.99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{product-url}}/01a0871c-57c4-7ab5-a9fe-a4d3efc18a63",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "01a0871c-57c4-7ab5-a9fe-a4d3efc18a63"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Product",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/01a0871c-57c4-7ab5-a9fe-a4d3efc18a63/deactivate",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "01a0871c-57c4-7ab5-a9fe-a4d3efc18a63",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Product",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/01a0871c-57c4-7ab5-a9fe-a4d3efc18a63/activate",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "01a0871c-57c4-7ab5-a9fe-a4d3efc18a63",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{product-url}}/01a0871c-57c4-7ab5-a9fe-a4d3efc18a63",
+              "host": [
+                "{{product-url}}"
+              ],
+              "path": [
+                "01a0871c-57c4-7ab5-a9fe-a4d3efc18a63"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

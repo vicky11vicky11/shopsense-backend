@@ -1,0 +1,408 @@
+{
+  "info": {
+    "_postman_id": "2fa2e0f7-58b4-4c73-b3c8-e7d90a52faf1",
+    "name": "User Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57740050",
+    "_collection_link": "https://go.postman.co/collection/57740050-2fa2e0f7-58b4-4c73-b3c8-e7d90a52faf1?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Customer\",\n    \"lastName\": \"ONE\",\n    \"email\": \"vicky@customer.com\",\n    \"phone\": \"1111111111\",\n    \"profileImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{customer-url}}",
+              "host": [
+                "{{customer-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer-url}}/6a9d63ac91a640e30bbd3f33",
+              "host": [
+                "{{customer-url}}"
+              ],
+              "path": [
+                "6a9d63ac91a640e30bbd3f33"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Customer\",\n    \"lastName\": \"One\",\n    \"email\": \"vicky@customer.com\",\n    \"phone\": \"1111111111\",\n    \"profileImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{customer-url}}/6a9d63ac91a640e30bbd3f33",
+              "host": [
+                "{{customer-url}}"
+              ],
+              "path": [
+                "6a9d63ac91a640e30bbd3f33"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{customer-url}}/6a9d63ac91a640e30bbd3f33",
+              "host": [
+                "{{customer-url}}"
+              ],
+              "path": [
+                "6a9d63ac91a640e30bbd3f33"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Seller",
+      "item": [
+        {
+          "name": "Create Seller",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Seller\",\n    \"lastName\": \"ONE\",\n    \"email\": \"vicky@seller.com\",\n    \"phone\": \"2222222222\",\n    \"profileImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{seller-url}}",
+              "host": [
+                "{{seller-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seller By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{seller-url}}/6a9d653ff98d4462e2661684",
+              "host": [
+                "{{seller-url}}"
+              ],
+              "path": [
+                "6a9d653ff98d4462e2661684"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Seller",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Seller\",\n    \"lastName\": \"One\",\n    \"email\": \"vicky@seller.com\",\n    \"phone\": \"2222222222\",\n    \"profileImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{seller-url}}/6a9d653ff98d4462e2661684",
+              "host": [
+                "{{seller-url}}"
+              ],
+              "path": [
+                "6a9d653ff98d4462e2661684"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Seller",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{seller-url}}/6a9d653ff98d4462e2661684",
+              "host": [
+                "{{seller-url}}"
+              ],
+              "path": [
+                "6a9d653ff98d4462e2661684"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Admin\",\n    \"lastName\": \"ONE\",\n    \"email\": \"vicky@admin.com\",\n    \"phone\": \"3333333333\",\n    \"profileImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{admin-url}}",
+              "host": [
+                "{{admin-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin-url}}/6a9d6a87f98d4462e2661685",
+              "host": [
+                "{{admin-url}}"
+              ],
+              "path": [
+                "6a9d6a87f98d4462e2661685"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users By Role",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{admin-url}}/bulk?role=ADMIN",
+              "host": [
+                "{{admin-url}}"
+              ],
+              "path": [
+                "bulk"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Admin\",\n    \"lastName\": \"One\",\n    \"email\": \"vicky@admin.com\",\n    \"phone\": \"3333333333\",\n    \"profileImageId\":\"6a9d1e927b338ce4272530ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{seller-url}}/6a9d6a87f98d4462e2661685",
+              "host": [
+                "{{seller-url}}"
+              ],
+              "path": [
+                "6a9d6a87f98d4462e2661685"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Seller",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{seller-url}}/6a9d6a87f98d4462e2661685",
+              "host": [
+                "{{seller-url}}"
+              ],
+              "path": [
+                "6a9d6a87f98d4462e2661685"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Address",
+      "item": [
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"6a9d63ac91a640e30bbd3f33\",\n    \"addressName\": \"Home\",\n    \"recipientName\": \"Customer\",\n    \"phone\": \"1111111111\",\n    \"addressLine1\": \"addressLine1\",\n    \"addressLine2\": \"addressLine2\",\n    \"city\": \"city\",\n    \"state\": \"state\",\n    \"country\": \"country\",\n    \"postalCode\": \"621211\",\n    \"defaultAddress\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{address-url}}",
+              "host": [
+                "{{address-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Address By User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{address-url}}/bulk/6a9d63ac91a640e30bbd3f33",
+              "host": [
+                "{{address-url}}"
+              ],
+              "path": [
+                "bulk",
+                "6a9d63ac91a640e30bbd3f33"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Address",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{address-url}}/6a9d6e468de1519c2a3c4e96/user/6a9d63ac91a640e30bbd3f33",
+              "host": [
+                "{{address-url}}"
+              ],
+              "path": [
+                "6a9d6e468de1519c2a3c4e96",
+                "user",
+                "6a9d63ac91a640e30bbd3f33"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"6a9d63ac91a640e30bbd3f33\",\n    \"addressName\": \"Home\",\n    \"recipientName\": \"Customer\",\n    \"phone\": \"1111111111\",\n    \"addressLine1\": \"addressLine1\",\n    \"addressLine2\": \"addressLine2\",\n    \"city\": \"city\",\n    \"state\": \"state\",\n    \"country\": \"country\",\n    \"postalCode\": \"600000\",\n    \"defaultAddress\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{address-url}}/6a9d6e468de1519c2a3c4e96",
+              "host": [
+                "{{address-url}}"
+              ],
+              "path": [
+                "6a9d6e468de1519c2a3c4e96"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{address-url}}/6a9d6e468de1519c2a3c4e96/user/6a9d63ac91a640e30bbd3f33",
+              "host": [
+                "{{address-url}}"
+              ],
+              "path": [
+                "6a9d6e468de1519c2a3c4e96",
+                "user",
+                "6a9d63ac91a640e30bbd3f33"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

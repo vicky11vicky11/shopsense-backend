@@ -1,0 +1,191 @@
+{
+  "info": {
+    "_postman_id": "f6ee668c-e4e6-490f-88d5-22a8e1036607",
+    "name": "Media Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57740050",
+    "_collection_link": "https://go.postman.co/collection/57740050-f6ee668c-e4e6-490f-88d5-22a8e1036607?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Cloudinary",
+      "item": [
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "mediaType",
+                  "value": "REVIEW",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [
+                    "/home/vicky/Downloads/spiderman_profile.jpg"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{media-url}}",
+              "host": [
+                "{{media-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{media-url}}/6a9d1e927b338ce4272530ca",
+              "host": [
+                "{{media-url}}"
+              ],
+              "path": [
+                "6a9d1e927b338ce4272530ca"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Image",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [
+                    "/home/vicky/Downloads/doggy_profile.jpg"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{media-url}}/6a9d1e927b338ce4272530ca",
+              "host": [
+                "{{media-url}}"
+              ],
+              "path": [
+                "6a9d1e927b338ce4272530ca"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{media-url}}/6a9d206a7b338ce4272530cb",
+              "host": [
+                "{{media-url}}"
+              ],
+              "path": [
+                "6a9d206a7b338ce4272530cb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Bulk Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "mediaType",
+                  "value": "PRODUCT",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [
+                    "/home/vicky/Downloads/screen_product.jpg"
+                  ]
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [
+                    "/home/vicky/Downloads/iphone_product.jpg"
+                  ]
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [
+                    "/home/vicky/Downloads/doggy_profile.jpg"
+                  ]
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [
+                    "/home/vicky/Downloads/spiderman_profile.jpg"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{media-url}}/bulk-upload",
+              "host": [
+                "{{media-url}}"
+              ],
+              "path": [
+                "bulk-upload"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bulk Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"ids\": [\n        \"6a9d1c8e7b338ce4272530c4\",\n        \"6a9d1d737b338ce4272530c5\",\n        \"6a9d1df57b338ce4272530c6\",\n        \"6a9d1df57b338ce4272530c7\",\n        \"6a9d1df57b338ce4272530c8\"\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{media-url}}/bulk",
+              "host": [
+                "{{media-url}}"
+              ],
+              "path": [
+                "bulk"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
