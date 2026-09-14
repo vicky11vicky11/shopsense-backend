@@ -50,13 +50,14 @@ public class MediaServiceImpl implements MediaService {
         List<MultipartFile> images = mediaRequest.getImages();
         images.forEach(this::validateImage);
         log.info("Uploading {} images with media type: {}", images.size(), mediaRequest.getMediaType());
+        List<Media> mediaList = images.stream()
+                .map(image -> CompletableFuture.supplyAsync(() -> uploadImageToCloudinary(image, mediaRequest.getMediaType()), mediaUploadExecutor))
+                .toList()
+                .stream()
+                .map(CompletableFuture::join)
+                .toList();
+
         try {
-            List<CompletableFuture<Media>> futures = images.stream()
-                    .map(image -> CompletableFuture.supplyAsync(() -> uploadImageToCloudinary(image, mediaRequest.getMediaType())))
-                    .toList();
-            List<Media> mediaList = futures.stream()
-                    .map(CompletableFuture::join)
-                    .toList();
             List<Media> savedMediaList = mediaRepository.saveAll(mediaList);
             log.info("{} media records saved successfully to MongoDB", savedMediaList.size());
             return savedMediaList.stream()
@@ -65,7 +66,8 @@ public class MediaServiceImpl implements MediaService {
                             .build())
                     .toList();
         } catch ( Exception exception ) {
-            log.error("Failed to upload multiple images", exception);
+            log.error("Failed to save {} media records, rolling back Cloudinary uploads", mediaList.size(), exception);
+            mediaList.forEach(media -> safeDestroy(media.getPublicId()));
             throw new MediaUploadException("Failed to upload multiple images", exception);
         }
     }
@@ -108,29 +110,35 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public void deleteImage( String id ) {
         Media media = findMediaById(id);
+        log.info("Deleting media with ID: {}", id);
+        mediaRepository.delete(media);
         try {
-            log.info("Deleting media with ID: {}", id);
             Map<?, ?> deleteResult = cloudinary.uploader()
                     .destroy(media.getPublicId(), ObjectUtils.asMap("resource_type", "image"));
             String result = (String) deleteResult.get("result");
             if ( !"ok".equals(result) ) {
-                throw new MediaUploadException("Failed to delete image");
+                log.error("CRITICAL: Cloudinary delete returned non-ok result '{}' for orphaned asset: {}", result, media.getPublicId());
+            } else {
+                log.info("Image deleted successfully from Cloudinary. Media ID: {}", id);
             }
-            mediaRepository.delete(media);
-            log.info("Image deleted successfully. Media ID: {}", id);
         } catch ( IOException exception ) {
-            log.error("Failed to delete media with ID: {}", id, exception);
-            throw new MediaUploadException("Failed to delete image", exception);
+            log.error("CRITICAL: DB record deleted but Cloudinary asset remains orphaned: {}", media.getPublicId(), exception);
         }
     }
 
     private MediaResponse uploadSingleImage( MultipartFile image, MediaType mediaType ) {
         Media media = uploadImageToCloudinary(image, mediaType);
-        Media savedMedia = mediaRepository.save(media);
-        log.info("Image uploaded successfully. Media ID: {}", savedMedia.getId());
-        return MediaResponse.builder()
-                .id(savedMedia.getId())
-                .build();
+        try {
+            Media savedMedia = mediaRepository.save(media);
+            log.info("Image uploaded successfully. Media ID: {}", savedMedia.getId());
+            return MediaResponse.builder()
+                    .id(savedMedia.getId())
+                    .build();
+        } catch ( Exception exception ) {
+            log.error("Failed to persist media after Cloudinary upload, rolling back asset: {}", media.getPublicId(), exception);
+            safeDestroy(media.getPublicId());
+            throw new MediaUploadException("Failed to upload image", exception);
+        }
     }
 
     private Media uploadImageToCloudinary( MultipartFile image, MediaType mediaType ) {
@@ -142,6 +150,23 @@ public class MediaServiceImpl implements MediaService {
         } catch ( IOException exception ) {
             log.error("Failed to upload image to Cloudinary", exception);
             throw new MediaUploadException("Failed to upload image", exception);
+        }
+    }
+
+    private void safeDestroy( String publicId ) {
+        if ( publicId == null ) {
+            return;
+        }
+        try {
+            Map<?, ?> result = cloudinary.uploader()
+                    .destroy(publicId, ObjectUtils.asMap("resource_type", "image"));
+            if ( !"ok".equals(result.get("result")) ) {
+                log.error("CRITICAL: rollback destroy returned non-ok for orphaned asset: {}", publicId);
+            } else {
+                log.info("Rolled back Cloudinary asset: {}", publicId);
+            }
+        } catch ( IOException exception ) {
+            log.error("CRITICAL: failed to roll back orphaned Cloudinary asset: {}", publicId, exception);
         }
     }
 
