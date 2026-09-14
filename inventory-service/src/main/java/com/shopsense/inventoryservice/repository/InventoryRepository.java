@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,4 +55,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
                   AND i.quantity + :quantity >= i.reservedQuantity
             """)
     int adjustStock( @Param("productId") UUID productId, @Param("quantity") Integer quantity );
+
+    List<Inventory> findByProductIdIn( List<UUID> productIds);
 }

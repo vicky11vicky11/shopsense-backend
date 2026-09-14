@@ -5,6 +5,7 @@ public enum ReservationStatus {
     RESERVED,
     CONSUMED,
     RELEASED,
-    EXPIRED;
+    EXPIRED,
+    FAILED;
 
 }

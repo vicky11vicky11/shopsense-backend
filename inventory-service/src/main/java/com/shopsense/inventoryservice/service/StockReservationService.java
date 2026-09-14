@@ -12,4 +12,10 @@ public interface StockReservationService {
     void release( UUID reservationId );
 
     void consume( UUID reservationId );
+
+    StockReservationResponse getById(UUID reservationId);
+
+    StockReservationResponse getByOrderId(UUID orderId);
+
+    void expireReservations();
 }

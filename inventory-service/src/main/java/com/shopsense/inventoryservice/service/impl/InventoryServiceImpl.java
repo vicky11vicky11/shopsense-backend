@@ -3,22 +3,29 @@ package com.shopsense.inventoryservice.service.impl;
 import com.shopsense.inventoryservice.entity.Inventory;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.enums.StockMovementType;
+import com.shopsense.inventoryservice.enums.StockStatus;
 import com.shopsense.inventoryservice.exceptions.InventoryNotFoundException;
 import com.shopsense.inventoryservice.mapper.InventoryMapper;
 import com.shopsense.inventoryservice.repository.InventoryRepository;
 import com.shopsense.inventoryservice.repository.StockMovementRepository;
+import com.shopsense.inventoryservice.request.BulkInventoryRequest;
 import com.shopsense.inventoryservice.request.CreateInventoryRequest;
 import com.shopsense.inventoryservice.request.StockAdjustmentRequest;
 import com.shopsense.inventoryservice.request.UpdateInventoryRequest;
 import com.shopsense.inventoryservice.response.AvailabilityResponse;
 import com.shopsense.inventoryservice.response.InventoryResponse;
+import com.shopsense.inventoryservice.response.StockMovementResponse;
 import com.shopsense.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -121,17 +128,82 @@ public class InventoryServiceImpl implements InventoryService {
     @Transactional(readOnly = true)
     public AvailabilityResponse getAvailability( UUID productId ) {
         Inventory inventory = getInventory(productId);
-        int available = inventory.getQuantity() - inventory.getReservedQuantity();
-        return AvailabilityResponse.builder()
-                .productId(productId)
-                .availableQuantity(available)
-                .available(available > 0)
-                .lowStock(available <= inventory.getLowStockThreshold())
+        return buildAvailabilityResponse(inventory);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AvailabilityResponse> getBulkAvailability( BulkInventoryRequest request ) {
+        List<UUID> productIds = request.getProductIds();
+        if ( productIds.size() != new HashSet<>(productIds).size() ) {
+            throw new IllegalArgumentException("Duplicate product IDs are not allowed");
+        }
+        List<Inventory> inventories = inventoryRepository.findByProductIdIn(productIds);
+        Map<UUID, Inventory> inventoryMap = inventories.stream()
+                .collect(Collectors.toMap(Inventory::getProductId, inventory -> inventory));
+        return productIds.stream()
+                .map(productId -> {
+                    Inventory inventory = inventoryMap.get(productId);
+                    if ( inventory == null ) {
+                        throw new InventoryNotFoundException(productId);
+                    }
+                    return buildAvailabilityResponse(inventory);
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StockMovementResponse> getMovementHistory( UUID productId ) {
+        if ( !inventoryRepository.existsByProductId(productId) ) {
+            throw new InventoryNotFoundException(productId);
+        }
+        return stockMovementRepository.findByProductIdOrderByCreatedAtDesc(productId)
+                .stream()
+                .map(this::toMovementResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StockMovementResponse> getMovementHistoryByReference( UUID referenceId ) {
+        return stockMovementRepository.findByReferenceId(referenceId)
+                .stream()
+                .map(this::toMovementResponse)
+                .toList();
+    }
+
+    private StockMovementResponse toMovementResponse( StockMovement movement ) {
+        return StockMovementResponse.builder()
+                .id(movement.getId())
+                .productId(movement.getProductId())
+                .type(movement.getType())
+                .quantity(movement.getQuantity())
+                .referenceId(movement.getReferenceId())
+                .reason(movement.getReason())
+                .createdAt(movement.getCreatedAt())
                 .build();
     }
 
     private Inventory getInventory( UUID productId ) {
         return inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new InventoryNotFoundException(productId));
+    }
+
+    private AvailabilityResponse buildAvailabilityResponse( Inventory inventory ) {
+        int available = inventory.getQuantity() - inventory.getReservedQuantity();
+        StockStatus status;
+        if ( available <= 0 ) {
+            status = StockStatus.SOLD_OUT;
+        } else if ( available <= inventory.getLowStockThreshold() ) {
+            status = StockStatus.LOW_STOCK;
+        } else {
+            status = StockStatus.IN_STOCK;
+        }
+        return AvailabilityResponse.builder()
+                .productId(inventory.getProductId())
+                .availableQuantity(available)
+                .stockStatus(status)
+                .build();
     }
 }

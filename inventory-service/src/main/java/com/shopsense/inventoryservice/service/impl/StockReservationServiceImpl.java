@@ -3,7 +3,6 @@ package com.shopsense.inventoryservice.service.impl;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.entity.StockReservation;
 import com.shopsense.inventoryservice.enums.ReservationStatus;
-import com.shopsense.inventoryservice.enums.ReservationStatusResponse;
 import com.shopsense.inventoryservice.enums.StockMovementType;
 import com.shopsense.inventoryservice.exceptions.InsufficientStockException;
 import com.shopsense.inventoryservice.exceptions.ReservationNotFoundException;
@@ -15,15 +14,21 @@ import com.shopsense.inventoryservice.response.StockReservationResponse;
 import com.shopsense.inventoryservice.service.StockReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class StockReservationServiceImpl implements StockReservationService {
+
+    @Value("${reservation.expiry}")
+    private long RESERVATION_DURATION_MINUTES;
 
     private final InventoryRepository inventoryRepository;
 
@@ -35,19 +40,12 @@ public class StockReservationServiceImpl implements StockReservationService {
     @Transactional
     public StockReservationResponse reserve( ReserveStockRequest request ) {
         UUID orderId = request.getOrderId();
-        Set<UUID> productIds = new HashSet<>();
-        for (ReserveStockRequest.ReservationItem item
-                : request.getItems()) {
-            if (!productIds.add(item.getProductId())) {
-                throw new IllegalArgumentException(
-                        "Duplicate product in reservation request: "
-                                + item.getProductId()
-                );
-            }
-        }
+        validateDuplicateProducts(request);
         if ( reservationRepository.existsByOrderId(orderId) ) {
-            return buildExistingReservationResponse(orderId);
+            return getByOrderId(orderId);
         }
+        Instant expiresAt = Instant.now()
+                .plus(RESERVATION_DURATION_MINUTES, ChronoUnit.MINUTES);
         for ( ReserveStockRequest.ReservationItem item : request.getItems() ) {
             int updatedRows = inventoryRepository.reserveStock(item.getProductId(), item.getQuantity());
             if ( updatedRows == 0 ) {
@@ -61,8 +59,9 @@ public class StockReservationServiceImpl implements StockReservationService {
                     .productId(item.getProductId())
                     .quantity(item.getQuantity())
                     .status(ReservationStatus.RESERVED)
+                    .expiresAt(expiresAt)
                     .build();
-            StockReservation saved = reservationRepository.save(reservation);
+            StockReservation saved = reservationRepository.saveAndFlush(reservation);
             reservations.add(saved);
             StockMovement movement = StockMovement.builder()
                     .productId(item.getProductId())
@@ -71,10 +70,10 @@ public class StockReservationServiceImpl implements StockReservationService {
                     .referenceId(saved.getId())
                     .reason("Stock reserved for order: " + orderId)
                     .build();
-            movementRepository.save(movement);
+            movementRepository.saveAndFlush(movement);
         }
-        log.info("Stock reserved successfully: orderId={}, items={}", orderId, reservations.size());
-        return buildResponse(orderId, ReservationStatusResponse.RESERVED, reservations);
+        log.info("Stock reserved successfully: orderId={}, items={}, expiresAt={}", orderId, reservations.size(), expiresAt);
+        return buildResponse(orderId, ReservationStatus.RESERVED, reservations);
     }
 
     @Override
@@ -85,21 +84,18 @@ public class StockReservationServiceImpl implements StockReservationService {
         if ( reservation.getStatus() != ReservationStatus.RESERVED ) {
             return;
         }
+        if ( isExpired(reservation) ) {
+            expireReservation(reservation);
+            return;
+        }
         int updatedRows = inventoryRepository.releaseStock(reservation.getProductId(), reservation.getQuantity());
         if ( updatedRows == 0 ) {
             throw new IllegalStateException("Unable to release reserved stock: " + reservationId);
         }
         reservation.setStatus(ReservationStatus.RELEASED);
-        reservationRepository.save(reservation);
-        StockMovement movement = StockMovement.builder()
-                .productId(reservation.getProductId())
-                .type(StockMovementType.RELEASE)
-                .quantity(reservation.getQuantity())
-                .referenceId(reservationId)
-                .reason("Reservation released for order: " + reservation.getOrderId())
-                .build();
-        movementRepository.save(movement);
-        log.info("Stock reservation released: reservationId={}", reservationId);
+        reservationRepository.saveAndFlush(reservation);
+        saveReleaseMovement(reservation);
+        log.info("Stock reservation released: reservationId={}, orderId={}", reservationId, reservation.getOrderId());
     }
 
     @Override
@@ -110,12 +106,16 @@ public class StockReservationServiceImpl implements StockReservationService {
         if ( reservation.getStatus() != ReservationStatus.RESERVED ) {
             return;
         }
+        if ( isExpired(reservation) ) {
+            expireReservation(reservation);
+            throw new IllegalStateException("Reservation has expired: " + reservationId);
+        }
         int updatedRows = inventoryRepository.consumeStock(reservation.getProductId(), reservation.getQuantity());
         if ( updatedRows == 0 ) {
             throw new IllegalStateException("Unable to consume reserved stock: " + reservationId);
         }
         reservation.setStatus(ReservationStatus.CONSUMED);
-        reservationRepository.save(reservation);
+        reservationRepository.saveAndFlush(reservation);
         StockMovement movement = StockMovement.builder()
                 .productId(reservation.getProductId())
                 .type(StockMovementType.STOCK_OUT)
@@ -123,26 +123,98 @@ public class StockReservationServiceImpl implements StockReservationService {
                 .referenceId(reservationId)
                 .reason("Stock consumed for order: " + reservation.getOrderId())
                 .build();
-        movementRepository.save(movement);
-        log.info("Stock reservation consumed: reservationId={}", reservationId);
+        movementRepository.saveAndFlush(movement);
+        log.info("Stock reservation consumed: reservationId={}, orderId={}", reservationId, reservation.getOrderId());
     }
 
-    private StockReservationResponse buildExistingReservationResponse( UUID orderId ) {
+    @Override
+    @Transactional(readOnly = true)
+    public StockReservationResponse getById( UUID reservationId ) {
+        StockReservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException(reservationId));
+        return buildResponse(reservation.getOrderId(), toResponseStatus(reservation.getStatus()), List.of(reservation));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StockReservationResponse getByOrderId( UUID orderId ) {
         List<StockReservation> reservations = reservationRepository.findByOrderId(orderId);
         if ( reservations.isEmpty() ) {
-            throw new IllegalStateException("Reservation state is inconsistent for order: " + orderId);
+            throw new ReservationNotFoundException(orderId);
         }
-        ReservationStatusResponse status = switch ( reservations.getFirst()
-                .getStatus() ) {
-            case RESERVED -> ReservationStatusResponse.RESERVED;
-            case CONSUMED -> ReservationStatusResponse.CONSUMED;
-            case RELEASED -> ReservationStatusResponse.RELEASED;
-            case EXPIRED -> ReservationStatusResponse.RELEASED;
-        };
+        ReservationStatus status = toResponseStatus(reservations.getFirst()
+                .getStatus());
         return buildResponse(orderId, status, reservations);
     }
 
-    private StockReservationResponse buildResponse( UUID orderId, ReservationStatusResponse status, List<StockReservation> reservations ) {
+    @Override
+    @Transactional
+    public void expireReservations() {
+        Instant now = Instant.now();
+        List<StockReservation> expiredReservations = reservationRepository.findExpiredReservations(now);
+        for ( StockReservation reservation : expiredReservations ) {
+            expireReservation(reservation);
+            log.info("Reservation expired: reservationId={}, orderId={}, productId={}", reservation.getId(), reservation.getOrderId(), reservation.getProductId());
+        }
+    }
+
+    @Transactional
+    protected void expireReservation( StockReservation reservation ) {
+        if ( reservation.getStatus() != ReservationStatus.RESERVED ) {
+            return;
+        }
+        int updatedRows = inventoryRepository.releaseStock(reservation.getProductId(), reservation.getQuantity());
+        if ( updatedRows == 0 ) {
+            throw new IllegalStateException("Unable to release expired stock: " + reservation.getId());
+        }
+        reservation.setStatus(ReservationStatus.EXPIRED);
+        reservationRepository.saveAndFlush(reservation);
+        StockMovement movement = StockMovement.builder()
+                .productId(reservation.getProductId())
+                .type(StockMovementType.RELEASE)
+                .quantity(reservation.getQuantity())
+                .referenceId(reservation.getId())
+                .reason("Reservation expired for order: " + reservation.getOrderId())
+                .build();
+        movementRepository.saveAndFlush(movement);
+    }
+
+    private boolean isExpired( StockReservation reservation ) {
+        return reservation.getExpiresAt() != null && !reservation.getExpiresAt()
+                .isAfter(Instant.now());
+    }
+
+    private void validateDuplicateProducts( ReserveStockRequest request ) {
+        Set<UUID> productIds = new HashSet<>();
+        for ( ReserveStockRequest.ReservationItem item : request.getItems() ) {
+            if ( !productIds.add(item.getProductId()) ) {
+                throw new IllegalArgumentException("Duplicate product in reservation request: " + item.getProductId());
+            }
+        }
+    }
+
+    private void saveReleaseMovement( StockReservation reservation ) {
+        StockMovement movement = StockMovement.builder()
+                .productId(reservation.getProductId())
+                .type(StockMovementType.RELEASE)
+                .quantity(reservation.getQuantity())
+                .referenceId(reservation.getId())
+                .reason("Reservation released for order: " + reservation.getOrderId())
+                .build();
+        movementRepository.saveAndFlush(movement);
+    }
+
+    private ReservationStatus toResponseStatus( ReservationStatus status ) {
+        return switch ( status ) {
+            case RESERVED -> ReservationStatus.RESERVED;
+            case CONSUMED -> ReservationStatus.CONSUMED;
+            case RELEASED -> ReservationStatus.RELEASED;
+            case EXPIRED -> ReservationStatus.EXPIRED;
+            case FAILED -> ReservationStatus.FAILED;
+        };
+    }
+
+    private StockReservationResponse buildResponse( UUID orderId, ReservationStatus status, List<StockReservation> reservations ) {
         List<StockReservationResponse.ReservationItemResponse> items = reservations.stream()
                 .map(reservation -> StockReservationResponse.ReservationItemResponse.builder()
                         .reservationId(reservation.getId())
@@ -154,8 +226,10 @@ public class StockReservationServiceImpl implements StockReservationService {
                 .orderId(orderId)
                 .status(status)
                 .items(items)
-                .createdAt(reservations.getFirst()
-                        .getCreatedAt())
+                .createdAt(reservations.stream()
+                        .map(StockReservation::getCreatedAt)
+                        .min(Comparator.naturalOrder())
+                        .orElse(null))
                 .build();
     }
 }

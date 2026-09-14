@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "inventory", uniqueConstraints = { @UniqueConstraint(name = "uk_inventory_product", columnNames = "product_id") }, indexes = { @Index(name = "idx_inventory_product", columnList = "product_id") })
+@Table(schema = "inventory", name = "inventory", uniqueConstraints = { @UniqueConstraint(name = "uk_inventory_product", columnNames = "product_id") }, indexes = { @Index(name = "idx_inventory_product", columnList = "product_id") })
 public class Inventory {
 
     @Id

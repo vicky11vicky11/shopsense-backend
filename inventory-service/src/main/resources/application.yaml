@@ -49,3 +49,5 @@ eureka:
             defaultZone: ${EUREKA_URL}
         register-with-eureka: true
         fetch-registry: true
+reservation:
+    expiry: ${RESERVATION_DURATION_MINUTES}

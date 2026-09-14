@@ -1,6 +1,6 @@
 package com.shopsense.inventoryservice.response;
 
-import com.shopsense.inventoryservice.enums.ReservationStatusResponse;
+import com.shopsense.inventoryservice.enums.ReservationStatus;
 import lombok.*;
 
 import java.time.Instant;
@@ -16,7 +16,7 @@ public class StockReservationResponse {
 
     private UUID orderId;
 
-    private ReservationStatusResponse status;
+    private ReservationStatus status;
 
     private List<ReservationItemResponse> items;
 

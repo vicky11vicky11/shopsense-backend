@@ -1,5 +1,6 @@
 package com.shopsense.inventoryservice.response;
 
+import com.shopsense.inventoryservice.enums.StockStatus;
 import lombok.*;
 
 import java.util.UUID;
@@ -15,7 +16,5 @@ public class AvailabilityResponse {
 
     private Integer availableQuantity;
 
-    private boolean available;
-
-    private boolean lowStock;
+    private StockStatus  stockStatus;
 }

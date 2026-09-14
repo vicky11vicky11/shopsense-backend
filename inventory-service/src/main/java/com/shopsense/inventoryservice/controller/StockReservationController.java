@@ -6,6 +6,7 @@ import com.shopsense.inventoryservice.service.StockReservationService;
 import com.shopsense.inventoryservice.utils.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,24 +21,33 @@ public class StockReservationController {
 
     @PostMapping
     public ResponseEntity<StockReservationResponse> reserve( @Valid @RequestBody ReserveStockRequest request ) {
+        StockReservationResponse response = reservationService.reserve(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(response);
+    }
 
-        return ResponseEntity.ok(reservationService.reserve(request));
+    @GetMapping("/{reservationId}")
+    public ResponseEntity<StockReservationResponse> getById( @PathVariable UUID reservationId ) {
+        StockReservationResponse response = reservationService.getById(reservationId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<StockReservationResponse> getByOrderId( @PathVariable UUID orderId ) {
+        StockReservationResponse response = reservationService.getByOrderId(orderId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{reservationId}/release")
     public ResponseEntity<Void> release( @PathVariable UUID reservationId ) {
-
         reservationService.release(reservationId);
-
         return ResponseEntity.noContent()
                 .build();
     }
 
     @PostMapping("/{reservationId}/consume")
     public ResponseEntity<Void> consume( @PathVariable UUID reservationId ) {
-
         reservationService.consume(reservationId);
-
         return ResponseEntity.noContent()
                 .build();
     }
