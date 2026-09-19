@@ -1,6 +1,8 @@
 package com.shopsense.catalogservice.service.impl;
 
+import com.shopsense.catalogservice.client.AddressServiceClient;
 import com.shopsense.catalogservice.client.MediaServiceClient;
+import com.shopsense.catalogservice.client.SellerServiceClient;
 import com.shopsense.catalogservice.entity.Store;
 import com.shopsense.catalogservice.enums.MediaType;
 import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
@@ -30,7 +32,12 @@ public class StoreServiceImpl implements StoreService {
     private final StoreRepository storeRepository;
 
     private final StoreMapper storeMapper;
+
     private final MediaServiceClient mediaServiceClient;
+
+    private final SellerServiceClient sellerServiceClient;
+
+    private final AddressServiceClient addressServiceClient;
 
     @Override
     @Transactional
@@ -41,6 +48,8 @@ public class StoreServiceImpl implements StoreService {
         }
         Store store = storeMapper.toEntity(request);
         validateStoreImage(store.getStoreImageId());
+        validateAddress(store.getAddressId());
+        validateSellerId(store.getSellerId());
         store.setActive(true);
         Store savedStore = storeRepository.saveAndFlush(store);
         log.info("Store created successfully with id: {}", savedStore.getId());
@@ -119,6 +128,20 @@ public class StoreServiceImpl implements StoreService {
         boolean imageExist = mediaServiceClient.imageExist(storeImageId, MediaType.STORE);
         if ( !imageExist ) {
             throw new ResourceNotFoundException("Image not found with id: " + storeImageId);
+        }
+    }
+
+    private void validateAddress(String addressId) {
+        boolean addressExists = addressServiceClient.isAddressExists(addressId);
+        if ( !addressExists ) {
+            throw new ResourceNotFoundException("Address not found with id: " + addressId);
+        }
+    }
+
+    private void validateSellerId(String sellerId) {
+        boolean sellerExists = sellerServiceClient.isSellerExists(sellerId);
+        if ( !sellerExists ) {
+            throw new ResourceNotFoundException("Seller not found with id: " + sellerId);
         }
     }
 }

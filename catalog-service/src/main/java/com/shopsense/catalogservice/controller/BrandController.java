@@ -36,12 +36,12 @@ public class BrandController {
     }
 
     @GetMapping("/bulk")
-    public ResponseEntity<PageResponse<BrandResponse>> getAllBrands( @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<BrandResponse>> getAllBrands( @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
         return ResponseEntity.ok(brandService.getAllBrands(pageable));
     }
 
     @GetMapping("/active")
-    public ResponseEntity<PageResponse<BrandResponse>> getActiveBrands( @PageableDefault(size = 10, page = 0, sort = "name", direction = Sort.Direction.ASC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<BrandResponse>> getActiveBrands( @PageableDefault(sort = "name", direction = Sort.Direction.ASC) Pageable pageable ) {
         return ResponseEntity.ok(brandService.getActiveBrands(pageable));
     }
 

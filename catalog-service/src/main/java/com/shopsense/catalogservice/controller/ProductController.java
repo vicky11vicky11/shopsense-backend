@@ -66,7 +66,7 @@ public class ProductController {
         return ResponseEntity.ok(productResponse);
     }
 
-    @GetMapping("exists/{productId}/active")
+    @GetMapping("/exists/{productId}/active")
     public ResponseEntity<Boolean> getProductExistsAndActive( @PathVariable UUID productId ) {
         Boolean isProductExists = productService.isProductExistsAndActive(productId);
         return ResponseEntity.ok(isProductExists);
