@@ -40,6 +40,12 @@ public class AddressController {
         return ResponseEntity.ok(addressResponse);
     }
 
+    @GetMapping("/exists/{addressId}")
+    public ResponseEntity<Boolean> getAddressExists( @PathVariable String addressId ) {
+        boolean addressExists = addressService.isAddressExists(addressId);
+        return ResponseEntity.ok(addressExists);
+    }
+
     @PutMapping("/{addressId}")
     public ResponseEntity<AddressResponse> updateAddress( @PathVariable String addressId, @Valid @RequestBody AddressRequest addressRequest ) {
         AddressResponse addressResponse = addressService.updateAddress(addressId, addressRequest);

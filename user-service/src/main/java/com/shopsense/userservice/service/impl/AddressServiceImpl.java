@@ -69,6 +69,13 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    public boolean isAddressExists( String addressId ) {
+        boolean exists = addressRepository.existsById(addressId);
+        log.info("Address {} exists {}", addressId, exists);
+        return exists;
+    }
+
+    @Override
     @Transactional
     public AddressResponse updateAddress( String addressId, AddressRequest addressRequest ) {
         Address address = addressRepository.findByIdAndUserId(addressId, addressRequest.getUserId())

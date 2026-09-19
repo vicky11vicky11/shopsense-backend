@@ -16,13 +16,18 @@ public interface UserService {
 
     PageResponse<UserResponse> getAllUsersByRole( UserRole role, Pageable pageable );
 
-    UserResponse getCustomer( String id );
+    UserResponse getCustomer( String customerId );
 
-    UserResponse getSeller( String id );
+    UserResponse getSeller( String sellerId );
 
-    UserResponse getAdmin( String id );
+    UserResponse getAdmin( String adminId );
 
-    UserResponse updateUser( String id, UserRequest userRequest );
+    boolean isCustomerExists( String customerId );
 
-    void deleteUser( String id );
+    boolean isSellerExists( String sellerId );
+
+    UserResponse updateUser( String userId, UserRequest userRequest );
+
+    void deleteUser( String userId );
+
 }

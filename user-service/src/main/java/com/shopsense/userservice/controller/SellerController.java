@@ -30,6 +30,12 @@ public class SellerController {
         return ResponseEntity.ok(userResponse);
     }
 
+    @GetMapping("/exists/{sellerId}")
+    public ResponseEntity<Boolean> getCustomerExists( @PathVariable String sellerId ) {
+        boolean customerExists = userService.isSellerExists(sellerId);
+        return ResponseEntity.ok(customerExists);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateSeller( @PathVariable String id, @Valid @RequestBody UserRequest userRequest ) {
         UserResponse userResponse = userService.updateUser(id, userRequest);

@@ -13,7 +13,10 @@ public interface AddressService {
 
     AddressResponse getAddressById( String addressId, String userId );
 
+    boolean isAddressExists( String addressId );
+
     AddressResponse updateAddress( String addressId, @Valid AddressRequest addressRequest );
 
     void deleteAddress( String addressId, String userId );
+
 }

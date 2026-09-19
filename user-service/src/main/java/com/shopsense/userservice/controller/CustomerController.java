@@ -24,21 +24,27 @@ public class CustomerController {
                 .body(userResponse);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getCustomer( @PathVariable String id ) {
-        UserResponse userResponse = userService.getCustomer(id);
+    @GetMapping("/{customerId}")
+    public ResponseEntity<UserResponse> getCustomer( @PathVariable String customerId ) {
+        UserResponse userResponse = userService.getCustomer(customerId);
         return ResponseEntity.ok(userResponse);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateCustomer( @PathVariable String id, @Valid @RequestBody UserRequest userRequest ) {
-        UserResponse userResponse = userService.updateUser(id, userRequest);
+    @GetMapping("/exists/{customerId}")
+    public ResponseEntity<Boolean> getCustomerExists( @PathVariable String customerId ) {
+        boolean customerExists = userService.isCustomerExists(customerId);
+        return ResponseEntity.ok(customerExists);
+    }
+
+    @PutMapping("/{customerId}")
+    public ResponseEntity<UserResponse> updateCustomer( @PathVariable String customerId, @Valid @RequestBody UserRequest userRequest ) {
+        UserResponse userResponse = userService.updateUser(customerId, userRequest);
         return ResponseEntity.ok(userResponse);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCustomer( @PathVariable String id ) {
-        userService.deleteUser(id);
+    @DeleteMapping("/{customerId}")
+    public ResponseEntity<Void> deleteCustomer( @PathVariable String customerId ) {
+        userService.deleteUser(customerId);
         return ResponseEntity.noContent()
                 .build();
     }

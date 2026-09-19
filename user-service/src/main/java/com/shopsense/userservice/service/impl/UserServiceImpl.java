@@ -77,6 +77,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean isCustomerExists( String customerId ) {
+        boolean userExists = isUserExists(customerId, UserRole.CUSTOMER);
+        log.info("Customer {} exists {}", customerId, userExists);
+        return userExists;
+    }
+
+    @Override
+    public boolean isSellerExists( String sellerId ) {
+        boolean userExists = isUserExists(sellerId, UserRole.SELLER);
+        log.info("Seller {} exists {}", sellerId, userExists);
+        return userExists;
+    }
+
+    @Override
     @Transactional
     public UserResponse updateUser( String id, UserRequest userRequest ) {
         User user = userRepository.findById(id)
@@ -143,7 +157,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(savedUser);
     }
 
-
     private UserResponse getUserById( String id, UserRole userRole ) {
         User user = userRepository.findByIdAndRole(id, userRole)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id : " + id));
@@ -152,5 +165,11 @@ public class UserServiceImpl implements UserService {
         }
         log.info("Fetched user with id {}", id);
         return userMapper.toResponse(user);
+    }
+
+    private boolean isUserExists( String id, UserRole userRole ) {
+        boolean exists = userRepository.existsByIdAndRoleAndStatus(id, userRole, UserStatus.ACTIVE);
+        log.info("User {} with role {} exists {}", id, userRole, exists);
+        return exists;
     }
 }

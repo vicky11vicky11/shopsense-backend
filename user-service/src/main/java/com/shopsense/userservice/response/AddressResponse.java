@@ -37,8 +37,6 @@ public class AddressResponse {
 
     private boolean defaultAddress;
 
-    private boolean deleted;
-
     private Instant createdAt;
 
     private Instant updatedAt;
