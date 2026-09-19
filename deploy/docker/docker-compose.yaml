@@ -25,7 +25,6 @@ services:
             timeout: 5s
             retries: 5
             start_period: 15s
-
     mysql-cleanup:
         image: busybox:latest
         container_name: mysql-cleanup
@@ -37,31 +36,24 @@ services:
         volumes:
             - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
         restart: "no"
-
     mysql:
         container_name: mysql
         image: mysql:8.4
         restart: unless-stopped
         tty: true
-
         depends_on:
             mysql-cleanup:
                 condition: service_completed_successfully
-
         ports:
             - "3306:3306"
-
         environment:
             MYSQL_ROOT_PASSWORD: root
             MYSQL_DATABASE: product_service
             GLIBC_TUNABLES: "glibc.pthread.rseq=1"
-
         volumes:
             - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
-
         networks:
             - dev_network
-
         healthcheck:
             test:
               [
@@ -92,7 +84,31 @@ services:
             interval: 5s
             timeout: 5s
             retries: 50
-
+    redis:
+        image: redis:8
+        container_name: redis
+        restart: on-failure
+        tty: true
+        ports:
+            - "6379:6379"
+        command:
+            - redis-server
+            - --aclfile
+            - /usr/local/etc/redis/users.acl
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/redis:/data:z
+            - /home/vicky/Projects/ShopSense/data/redis/users.acl:/usr/local/etc/redis/users.acl:ro,z
+        networks:
+            - dev_network
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "redis-cli --user root --pass root ping | grep PONG"
+              ]
+            interval: 5s
+            timeout: 5s
+            retries: 50
 networks:
     dev_network:
         driver: bridge
