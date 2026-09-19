@@ -48,5 +48,8 @@ public interface ProductMediaRepository extends JpaRepository<ProductMedia, UUID
 
     Page<ProductMedia> findByProductIdOrderByDisplayOrderAsc( UUID productId, Pageable pageable );
 
+    List<ProductMedia> findByProductIdOrderByDisplayOrderAsc(UUID productId);
+
+
     Optional<ProductMedia> findFirstByProductIdAndIdNotOrderByDisplayOrderAsc( UUID productId, UUID id );
 }

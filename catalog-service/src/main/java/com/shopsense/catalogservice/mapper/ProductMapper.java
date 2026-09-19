@@ -32,5 +32,7 @@ public interface ProductMapper {
     @Mapping(target = "storeId", source = "store.id")
     @Mapping(target = "categoryId", source = "category.id")
     @Mapping(target = "brandId", source = "brand.id")
+    @Mapping(target = "productImages", ignore = true)
+    @Mapping(target = "productInformation", ignore = true)
     ProductResponse toResponse( Product product );
 }

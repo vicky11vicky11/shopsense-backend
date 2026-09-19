@@ -126,6 +126,15 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ProductMediaResponse getProductPrimaryImage( UUID productId ) {
+        ProductMedia productMedia = productMediaRepository.findByProductIdAndPrimaryImageTrue(productId)
+                .orElse(null);
+        log.info("Product media primary image found: {}", productMedia);
+        return productMediaMapper.toResponse(productMedia);
+    }
+
+    @Override
     @Transactional
     public ProductMediaResponse update( UUID productId, UUID productMediaId, ProductMediaRequest request ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);

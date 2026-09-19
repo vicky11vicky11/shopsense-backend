@@ -1,9 +1,12 @@
 package com.shopsense.catalogservice.response;
 
+import com.shopsense.catalogservice.response.ProductInformationResponse;
+import com.shopsense.catalogservice.response.ProductMediaResponse;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -28,6 +31,10 @@ public class ProductResponse {
     private BigDecimal price;
 
     private boolean active;
+
+    private List<ProductMediaResponse>  productImages;
+
+    private List<ProductInformationResponse>  productInformation;
 
     private Instant createdAt;
 

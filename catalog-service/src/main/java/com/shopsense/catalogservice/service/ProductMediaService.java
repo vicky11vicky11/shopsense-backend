@@ -17,6 +17,8 @@ public interface ProductMediaService {
 
     ProductMediaResponse getById( UUID productId, UUID productMediaId );
 
+    ProductMediaResponse getProductPrimaryImage( UUID productId );
+
     PageResponse<ProductMediaResponse> getByProductId( UUID productId, Pageable pageable );
 
     ProductMediaResponse update( UUID productId, UUID productMediaId, ProductMediaRequest request );

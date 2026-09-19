@@ -44,6 +44,12 @@ public class ProductMediaController {
         return ResponseEntity.ok(productMediaResponse);
     }
 
+    @GetMapping("/primary")
+    public ResponseEntity<ProductMediaResponse> getProductPrimaryImage( @PathVariable UUID productId ) {
+        ProductMediaResponse productMediaResponse = productMediaService.getProductPrimaryImage(productId);
+        return ResponseEntity.ok(productMediaResponse);
+    }
+
     @GetMapping("/{productMediaId}")
     public ResponseEntity<ProductMediaResponse> getById( @PathVariable UUID productId, @PathVariable UUID productMediaId ) {
         ProductMediaResponse productMediaResponse = productMediaService.getById(productId, productMediaId);

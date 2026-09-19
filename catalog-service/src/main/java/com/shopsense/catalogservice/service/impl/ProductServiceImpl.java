@@ -5,11 +5,10 @@ import com.shopsense.catalogservice.entity.Category;
 import com.shopsense.catalogservice.entity.Product;
 import com.shopsense.catalogservice.entity.Store;
 import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
+import com.shopsense.catalogservice.mapper.ProductInformationMapper;
 import com.shopsense.catalogservice.mapper.ProductMapper;
-import com.shopsense.catalogservice.repository.BrandRepository;
-import com.shopsense.catalogservice.repository.CategoryRepository;
-import com.shopsense.catalogservice.repository.ProductRepository;
-import com.shopsense.catalogservice.repository.StoreRepository;
+import com.shopsense.catalogservice.mapper.ProductMediaMapper;
+import com.shopsense.catalogservice.repository.*;
 import com.shopsense.catalogservice.request.ProductRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.ProductResponse;
@@ -30,6 +29,10 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
+    private final ProductMediaRepository productMediaRepository;
+
+    private final ProductInformationRepository productInformationRepository;
+
     private final StoreRepository storeRepository;
 
     private final CategoryRepository categoryRepository;
@@ -37,6 +40,10 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
 
     private final ProductMapper productMapper;
+
+    private final ProductMediaMapper productMediaMapper;
+
+    private final ProductInformationMapper productInformationMapper;
 
     @Override
     @Transactional
@@ -53,14 +60,14 @@ public class ProductServiceImpl implements ProductService {
         product.setBrand(brand);
         Product savedProduct = productRepository.saveAndFlush(product);
         log.info("Product created successfully with id: {}", savedProduct.getId());
-        return productMapper.toResponse(savedProduct);
+        return toProductResponse(savedProduct);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductResponse getProductById( UUID productId ) {
         Product product = findProductById(productId);
-        return productMapper.toResponse(product);
+        return toProductResponse(product);
     }
 
     @Override
@@ -99,7 +106,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Boolean isProductExistsAndActive(UUID productId) {
+    public Boolean isProductExistsAndActive( UUID productId ) {
         boolean exists = productRepository.existsByIdAndActive(productId, true);
         log.info("Product with id: {} exists and active: {}", productId, exists);
         return exists;
@@ -122,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
         product.setBrand(brand);
         Product savedProduct = productRepository.saveAndFlush(product);
         log.info("Product updated successfully with id: {}", productId);
-        return productMapper.toResponse(savedProduct);
+        return toProductResponse(savedProduct);
     }
 
     @Override
@@ -149,6 +156,19 @@ public class ProductServiceImpl implements ProductService {
         Product product = findProductById(productId);
         productRepository.delete(product);
         log.info("Product deleted successfully with id: {}", productId);
+    }
+
+    private ProductResponse toProductResponse( Product product ) {
+        ProductResponse response = productMapper.toResponse(product);
+        response.setProductImages(productMediaRepository.findByProductIdOrderByDisplayOrderAsc(product.getId())
+                .stream()
+                .map(productMediaMapper::toResponse)
+                .toList());
+        response.setProductInformation(productInformationRepository.findByProductId(product.getId())
+                .stream()
+                .map(productInformationMapper::toResponse)
+                .toList());
+        return response;
     }
 
     private Product findProductById( UUID productId ) {
