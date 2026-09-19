@@ -43,7 +43,6 @@ public class MediaController {
         return ResponseEntity.ok(mediaService.getImage(id));
     }
 
-
     @PostMapping("/bulk")
     public ResponseEntity<List<MediaDetailsResponse>> getImages( @Valid @RequestBody BulkMediaRequest request ) {
         return ResponseEntity.ok(mediaService.getImages(request.getIds()));
