@@ -20,8 +20,7 @@ public class ReserveStockRequest {
     private UUID orderId;
 
     @NotEmpty(message = "Reservation items cannot be empty")
-    @Valid
-    private List<ReservationItem> items;
+    private List<@Valid  ReservationItem> items;
 
     @Getter
     @Setter
