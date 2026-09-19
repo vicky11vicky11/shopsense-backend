@@ -23,6 +23,8 @@ public interface ProductService {
 
     PageResponse<ProductResponse> getActiveProducts( Pageable pageable );
 
+    Boolean isProductExistsAndActive(UUID  productId);
+
     ProductResponse updateProduct( UUID productId, ProductRequest request );
 
     void activateProduct( UUID productId );
@@ -30,4 +32,5 @@ public interface ProductService {
     void deactivateProduct( UUID productId );
 
     void deleteProduct( UUID productId );
+
 }

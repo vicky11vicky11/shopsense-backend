@@ -1,6 +1,8 @@
 package com.shopsense.catalogservice.service.impl;
 
+import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Store;
+import com.shopsense.catalogservice.enums.MediaType;
 import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
 import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.StoreMapper;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -27,6 +30,7 @@ public class StoreServiceImpl implements StoreService {
     private final StoreRepository storeRepository;
 
     private final StoreMapper storeMapper;
+    private final MediaServiceClient mediaServiceClient;
 
     @Override
     @Transactional
@@ -36,6 +40,7 @@ public class StoreServiceImpl implements StoreService {
             throw new ResourceAlreadyExistsException("Store already exists for this seller and address");
         }
         Store store = storeMapper.toEntity(request);
+        validateStoreImage(store.getStoreImageId());
         store.setActive(true);
         Store savedStore = storeRepository.saveAndFlush(store);
         log.info("Store created successfully with id: {}", savedStore.getId());
@@ -65,7 +70,8 @@ public class StoreServiceImpl implements StoreService {
         if ( request.getStoreName() != null ) {
             store.setStoreName(request.getStoreName());
         }
-        if ( request.getStoreImageId() != null ) {
+        if ( !Objects.equals(store.getStoreImageId(), request.getStoreImageId()) ) {
+            validateStoreImage(request.getStoreImageId());
             store.setStoreImageId(request.getStoreImageId());
         }
         Store savedStore = storeRepository.saveAndFlush(store);
@@ -74,6 +80,7 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
+    @Transactional
     public void activateStore( UUID storeId ) {
         Store store = storeRepository.findByIdAndActive(storeId, false)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with deactivated state"));
@@ -93,6 +100,7 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
+    @Transactional
     public void deleteStore( UUID storeId ) {
         Store store = findStoreById(storeId);
         storeRepository.delete(store);
@@ -104,4 +112,13 @@ public class StoreServiceImpl implements StoreService {
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + storeId));
     }
 
+    private void validateStoreImage( String storeImageId ) {
+        if ( storeImageId == null ) {
+            return;
+        }
+        boolean imageExist = mediaServiceClient.imageExist(storeImageId, MediaType.STORE);
+        if ( !imageExist ) {
+            throw new ResourceNotFoundException("Image not found with id: " + storeImageId);
+        }
+    }
 }

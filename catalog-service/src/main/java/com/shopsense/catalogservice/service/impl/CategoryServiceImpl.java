@@ -1,6 +1,8 @@
 package com.shopsense.catalogservice.service.impl;
 
+import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Category;
+import com.shopsense.catalogservice.enums.MediaType;
 import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
 import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.CategoryMapper;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -26,6 +29,8 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
 
     private final CategoryMapper categoryMapper;
+
+    private final MediaServiceClient mediaServiceClient;
 
     @Override
     @Transactional
@@ -39,6 +44,7 @@ public class CategoryServiceImpl implements CategoryService {
             parentCategory = findCategoryById(request.getParentCategoryId());
         }
         Category category = categoryMapper.toEntity(request);
+        validateCategoryImage(category.getCategoryImageId());
         category.setParentCategory(parentCategory);
         category.setActive(true);
         Category savedCategory = categoryRepository.saveAndFlush(category);
@@ -105,6 +111,9 @@ public class CategoryServiceImpl implements CategoryService {
         if ( request.getParentCategoryId() != null ) {
             parentCategory = findCategoryById(request.getParentCategoryId());
         }
+        if ( Objects.equals(category.getCategoryImageId(), request.getCategoryImageId()) ) {
+            validateCategoryImage(request.getCategoryImageId());
+        }
         categoryMapper.updateEntity(request, category);
         category.setParentCategory(parentCategory);
         Category savedCategory = categoryRepository.saveAndFlush(category);
@@ -143,5 +152,15 @@ public class CategoryServiceImpl implements CategoryService {
     private Category findCategoryById( UUID categoryId ) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
+    }
+
+    private void validateCategoryImage( String categoryImageId ) {
+        if ( categoryImageId == null ) {
+            return;
+        }
+        boolean imageExist = mediaServiceClient.imageExist(categoryImageId, MediaType.CATEGORY);
+        if ( !imageExist ) {
+            throw new ResourceNotFoundException("Category image not found with id: " + categoryImageId);
+        }
     }
 }

@@ -1,6 +1,8 @@
 package com.shopsense.catalogservice.service.impl;
 
+import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Brand;
+import com.shopsense.catalogservice.enums.MediaType;
 import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
 import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.BrandMapper;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -27,6 +30,8 @@ public class BrandServiceImpl implements BrandService {
 
     private final BrandMapper brandMapper;
 
+    private final MediaServiceClient mediaServiceClient;
+
     @Override
     @Transactional
     public BrandResponse createBrand( BrandRequest request ) {
@@ -35,6 +40,7 @@ public class BrandServiceImpl implements BrandService {
             throw new ResourceAlreadyExistsException("Brand already exists with name: " + request.getBrandName());
         }
         Brand brand = brandMapper.toEntity(request);
+        validateBrandImage(brand.getBrandImageId());
         Brand savedBrand = brandRepository.saveAndFlush(brand);
         log.info("Brand created successfully with id: {}", savedBrand.getId());
         return brandMapper.toResponse(savedBrand);
@@ -75,6 +81,9 @@ public class BrandServiceImpl implements BrandService {
                 throw new ResourceAlreadyExistsException("Brand already exists with name: " + request.getBrandName());
             }
         }
+        if ( Objects.equals(brand.getBrandImageId(), request.getBrandImageId()) ) {
+            validateBrandImage(request.getBrandImageId());
+        }
         brandMapper.updateEntity(request, brand);
         Brand savedBrand = brandRepository.saveAndFlush(brand);
         log.info("Brand updated successfully with id: {}", brandId);
@@ -112,5 +121,15 @@ public class BrandServiceImpl implements BrandService {
     private Brand findBrandById( UUID brandId ) {
         return brandRepository.findById(brandId)
                 .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + brandId));
+    }
+
+    private void validateBrandImage( String brandImageId ) {
+        if ( brandImageId == null ) {
+            return;
+        }
+        boolean imageExist = mediaServiceClient.imageExist(brandImageId, MediaType.BRAND);
+        if ( !imageExist ) {
+            throw new ResourceNotFoundException("Brand image not found with id: " + brandImageId);
+        }
     }
 }

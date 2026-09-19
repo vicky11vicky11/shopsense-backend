@@ -21,4 +21,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     Page<Product> findByActive( Boolean active, Pageable pageable );
 
     Optional<Product> findByIdAndActive( UUID id, boolean active );
+
+    boolean existsByIdAndActive( UUID id, boolean active );
 }

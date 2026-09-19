@@ -1,7 +1,9 @@
 package com.shopsense.catalogservice.service.impl;
 
+import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Product;
 import com.shopsense.catalogservice.entity.ProductMedia;
+import com.shopsense.catalogservice.enums.MediaType;
 import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
 import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.ProductMediaMapper;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -34,6 +37,8 @@ public class ProductMediaServiceImpl implements ProductMediaService {
 
     private final ProductMediaMapper productMediaMapper;
 
+    private final MediaServiceClient mediaServiceClient;
+
     @Override
     @Transactional
     public ProductMediaResponse create( UUID productId, ProductMediaRequest request ) {
@@ -42,6 +47,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         if ( productMediaRepository.existsByProductIdAndMediaId(productId, request.getMediaId()) ) {
             throw new ResourceAlreadyExistsException("Media already exists for this product");
         }
+        validateProductImage(request.getMediaId());
         if ( request.isPrimaryImage() ) {
             unsetCurrentPrimaryImage(productId);
         }
@@ -70,6 +76,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
                 .count() ) {
             throw new IllegalArgumentException("Duplicate media IDs are not allowed");
         }
+        mediaIds.forEach(this::validateProductImage);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductIdAndMediaIdIn(productId, new HashSet<>(mediaIds));
         if ( !existingMedia.isEmpty() ) {
             String existingMediaId = existingMedia.getFirst()
@@ -89,7 +96,6 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         List<ProductMedia> productMediaList = new java.util.ArrayList<>();
         for ( ProductMediaRequest request : requests ) {
             ProductMedia productMedia = productMediaMapper.toEntity(request);
-            productMedia.setProduct(productMedia.getProduct());
             productMedia.setProduct(product);
             productMedia.setDisplayOrder(nextDisplayOrder++);
             productMediaList.add(productMedia);
@@ -123,12 +129,12 @@ public class ProductMediaServiceImpl implements ProductMediaService {
     @Transactional
     public ProductMediaResponse update( UUID productId, UUID productMediaId, ProductMediaRequest request ) {
         ProductMedia productMedia = getProductMedia(productId, productMediaId);
-        if ( !productMedia.getMediaId()
-                .equals(request.getMediaId()) ) {
+        if ( !Objects.equals(productMedia.getMediaId(), request.getMediaId()) ) {
             boolean exists = productMediaRepository.existsByProductIdAndMediaId(productId, request.getMediaId());
             if ( exists ) {
                 throw new ResourceAlreadyExistsException("Media already exists for this product");
             }
+            validateProductImage(request.getMediaId());
         }
         if ( !productMedia.getDisplayOrder()
                 .equals(request.getDisplayOrder()) ) {
@@ -205,5 +211,12 @@ public class ProductMediaServiceImpl implements ProductMediaService {
             productMediaRepository.decrementDisplayOrders(productId, oldOrder, newOrder);
         }
         productMedia.setDisplayOrder(newOrder);
+    }
+
+    private void validateProductImage( String productImageId ) {
+        boolean imageExist = mediaServiceClient.imageExist(productImageId, MediaType.PRODUCT);
+        if ( !imageExist ) {
+            throw new ResourceNotFoundException("Product image not found: " + productImageId);
+        }
     }
 }

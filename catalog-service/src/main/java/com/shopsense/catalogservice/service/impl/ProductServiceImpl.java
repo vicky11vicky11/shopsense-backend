@@ -99,6 +99,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Boolean isProductExistsAndActive(UUID productId) {
+        boolean exists = productRepository.existsByIdAndActive(productId, true);
+        log.info("Product with id: {} exists and active: {}", productId, exists);
+        return exists;
+    }
+
+    @Override
     @Transactional
     public ProductResponse updateProduct( UUID productId, ProductRequest request ) {
         Product product = findProductById(productId);

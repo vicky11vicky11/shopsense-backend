@@ -66,6 +66,12 @@ public class ProductController {
         return ResponseEntity.ok(productResponse);
     }
 
+    @GetMapping("exists/{productId}/active")
+    public ResponseEntity<Boolean> getProductExistsAndActive( @PathVariable UUID productId ) {
+        Boolean isProductExists = productService.isProductExistsAndActive(productId);
+        return ResponseEntity.ok(isProductExists);
+    }
+
     @PutMapping("/{productId}")
     public ResponseEntity<ProductResponse> updateProduct( @PathVariable UUID productId, @Valid @RequestBody ProductRequest request ) {
         ProductResponse productResponse = productService.updateProduct(productId, request);
