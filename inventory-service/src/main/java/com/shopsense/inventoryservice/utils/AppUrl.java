@@ -8,4 +8,6 @@ public class AppUrl {
 
     public static final String INVENTORY_URL  = BASE_URL + "/inventory";
     public static final String RESERVATION_URL  = BASE_URL + "/reservations";
+    public static final String PRODUCT_URL = BASE_URL + "/products";
+
 }

@@ -1,10 +1,12 @@
 package com.shopsense.inventoryservice.service.impl;
 
+import com.shopsense.inventoryservice.client.ProductServiceClient;
 import com.shopsense.inventoryservice.entity.Inventory;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.enums.StockMovementType;
 import com.shopsense.inventoryservice.enums.StockStatus;
 import com.shopsense.inventoryservice.exceptions.InventoryNotFoundException;
+import com.shopsense.inventoryservice.exceptions.ResourceNotFoundException;
 import com.shopsense.inventoryservice.mapper.InventoryMapper;
 import com.shopsense.inventoryservice.repository.InventoryRepository;
 import com.shopsense.inventoryservice.repository.StockMovementRepository;
@@ -38,9 +40,12 @@ public class InventoryServiceImpl implements InventoryService {
 
     private final InventoryMapper inventoryMapper;
 
+    private final ProductServiceClient productServiceClient;
+
     @Override
     @Transactional
     public InventoryResponse create( CreateInventoryRequest request ) {
+        validateProduct(request.getProductId());
         if ( inventoryRepository.existsByProductId(request.getProductId()) ) {
             throw new IllegalArgumentException("Inventory already exists for product: " + request.getProductId());
         }
@@ -73,6 +78,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public InventoryResponse update( UUID productId, UpdateInventoryRequest request ) {
+        validateProduct(productId);
         Inventory inventory = getInventory(productId);
         int currentQuantity = inventory.getQuantity();
         int newQuantity = request.getQuantity();
@@ -102,6 +108,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public InventoryResponse adjustStock( UUID productId, StockAdjustmentRequest request ) {
+        validateProduct(productId);
         Inventory inventory = getInventory(productId);
         int adjustment = request.getQuantity();
         int newQuantity = inventory.getQuantity() + adjustment;
@@ -205,5 +212,12 @@ public class InventoryServiceImpl implements InventoryService {
                 .availableQuantity(available)
                 .stockStatus(status)
                 .build();
+    }
+
+    private void validateProduct( UUID productId ) {
+        boolean productExists = productServiceClient.isProductExists(productId);
+        if ( !productExists ) {
+            throw new ResourceNotFoundException("Product not found: " + productId);
+        }
     }
 }

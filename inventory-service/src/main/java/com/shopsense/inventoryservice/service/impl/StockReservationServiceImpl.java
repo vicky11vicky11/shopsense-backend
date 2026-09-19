@@ -1,11 +1,14 @@
 package com.shopsense.inventoryservice.service.impl;
 
+import com.shopsense.inventoryservice.client.ProductServiceClient;
+import com.shopsense.inventoryservice.client.OrderServiceClient;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.entity.StockReservation;
 import com.shopsense.inventoryservice.enums.ReservationStatus;
 import com.shopsense.inventoryservice.enums.StockMovementType;
 import com.shopsense.inventoryservice.exceptions.InsufficientStockException;
 import com.shopsense.inventoryservice.exceptions.ReservationNotFoundException;
+import com.shopsense.inventoryservice.exceptions.ResourceNotFoundException;
 import com.shopsense.inventoryservice.repository.InventoryRepository;
 import com.shopsense.inventoryservice.repository.StockMovementRepository;
 import com.shopsense.inventoryservice.repository.StockReservationRepository;
@@ -27,6 +30,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class StockReservationServiceImpl implements StockReservationService {
 
+    private final OrderServiceClient orderServiceClient;
+
+    private final ProductServiceClient productServiceClient;
+
     @Value("${reservation.expiry}")
     private long RESERVATION_DURATION_MINUTES;
 
@@ -40,6 +47,7 @@ public class StockReservationServiceImpl implements StockReservationService {
     @Transactional
     public StockReservationResponse reserve( ReserveStockRequest request ) {
         UUID orderId = request.getOrderId();
+        validateOrder(orderId);
         validateDuplicateProducts(request);
         if ( reservationRepository.existsByOrderId(orderId) ) {
             return getByOrderId(orderId);
@@ -231,5 +239,19 @@ public class StockReservationServiceImpl implements StockReservationService {
                         .min(Comparator.naturalOrder())
                         .orElse(null))
                 .build();
+    }
+
+    private void validateOrder(UUID orderId){
+        boolean orderExists = orderServiceClient.idOrderExists(orderId);
+        if ( !orderExists ) {
+            throw new ResourceNotFoundException("Order does not exist: " + orderId);
+        }
+    }
+
+    private void validateProduct(UUID productId){
+        boolean productExists = productServiceClient.isProductExists(productId);
+        if ( !productExists ) {
+            throw new ResourceNotFoundException("Product not found: " + productId);
+        }
     }
 }

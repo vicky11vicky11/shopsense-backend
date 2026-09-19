@@ -94,6 +94,11 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.NOT_FOUND, "Inventory Not Found", ex.getMessage());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ProblemDetail handleResourceNotFoundException( ResourceNotFoundException ex ) {
+        return buildProblemDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage());
+    }
+
     @ExceptionHandler(InsufficientStockException.class)
     public ProblemDetail handleInsufficientStockException( InsufficientStockException ex ) {
         return buildProblemDetail(HttpStatus.CONFLICT, "Insufficient Stock", ex.getMessage());
