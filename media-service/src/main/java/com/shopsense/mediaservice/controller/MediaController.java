@@ -1,5 +1,6 @@
 package com.shopsense.mediaservice.controller;
 
+import com.shopsense.mediaservice.enums.MediaType;
 import com.shopsense.mediaservice.request.BulkMediaRequest;
 import com.shopsense.mediaservice.request.BulkMediaUploadRequest;
 import com.shopsense.mediaservice.request.MediaRequest;
@@ -42,9 +43,16 @@ public class MediaController {
         return ResponseEntity.ok(mediaService.getImage(id));
     }
 
+
     @PostMapping("/bulk")
     public ResponseEntity<List<MediaDetailsResponse>> getImages( @Valid @RequestBody BulkMediaRequest request ) {
         return ResponseEntity.ok(mediaService.getImages(request.getIds()));
+    }
+
+    @GetMapping("/exist/{id}")
+    public ResponseEntity<Boolean> imageExist( @PathVariable String id, @RequestParam MediaType mediaType ) {
+        boolean exist = mediaService.isImageExist(id, mediaType);
+        return ResponseEntity.ok(exist);
     }
 
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")

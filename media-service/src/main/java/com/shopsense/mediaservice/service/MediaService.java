@@ -1,5 +1,6 @@
 package com.shopsense.mediaservice.service;
 
+import com.shopsense.mediaservice.enums.MediaType;
 import com.shopsense.mediaservice.request.BulkMediaUploadRequest;
 import com.shopsense.mediaservice.request.MediaRequest;
 import com.shopsense.mediaservice.request.MediaUpdateRequest;
@@ -17,6 +18,8 @@ public interface MediaService {
     MediaDetailsResponse getImage( String id );
 
     List<MediaDetailsResponse> getImages( List<String> ids );
+
+    boolean isImageExist( String id, MediaType mediaType );
 
     MediaResponse updateImage( String id, MediaUpdateRequest mediaUpdateRequest );
 

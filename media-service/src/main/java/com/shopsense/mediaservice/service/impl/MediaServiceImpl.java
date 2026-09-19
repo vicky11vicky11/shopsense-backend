@@ -87,6 +87,13 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    public boolean isImageExist( String id, MediaType mediaType ) {
+        boolean exists = mediaRepository.existsByIdAndMediaType(id, mediaType);
+        log.info("Image with id: {} and type : {} exists : {}", id, mediaType, exists);
+        return exists;
+    }
+
+    @Override
     public MediaResponse updateImage( String id, MediaUpdateRequest mediaUpdateRequest ) {
         MultipartFile image = mediaUpdateRequest.getImage();
         validateImage(image);

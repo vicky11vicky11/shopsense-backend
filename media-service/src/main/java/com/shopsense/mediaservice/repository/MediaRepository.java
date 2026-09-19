@@ -1,6 +1,7 @@
 package com.shopsense.mediaservice.repository;
 
 import com.shopsense.mediaservice.entity.Media;
+import com.shopsense.mediaservice.enums.MediaType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,5 @@ public interface MediaRepository extends MongoRepository<Media, String> {
 
     List<Media> findAllByIdIn( List<String> ids );
 
+    boolean existsByIdAndMediaType( String id, MediaType mediaType );
 }
