@@ -1,6 +1,8 @@
 package com.shopsense.userservice.service.impl;
 
+import com.shopsense.userservice.client.MediaServiceClient;
 import com.shopsense.userservice.entity.User;
+import com.shopsense.userservice.enums.MediaType;
 import com.shopsense.userservice.enums.UserRole;
 import com.shopsense.userservice.enums.UserStatus;
 import com.shopsense.userservice.exceptions.ResourceNotFoundException;
@@ -16,8 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.NoSuchElementException;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,6 +26,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     private final UserMapper userMapper;
+
+    private final MediaServiceClient mediaServiceClient;
 
     @Override
     @Transactional
@@ -99,6 +101,10 @@ public class UserServiceImpl implements UserService {
         }
         if ( !user.getProfileImageId()
                 .equals(userRequest.getProfileImageId()) ) {
+            boolean imagedExist = mediaServiceClient.imageExist(userRequest.getProfileImageId(), MediaType.USER);
+            if ( !imagedExist ) {
+                throw new ResourceNotFoundException("Image not found by id : " + userRequest.getProfileImageId());
+            }
             user.setProfileImageId(userRequest.getProfileImageId());
         }
         User savedUser = userRepository.save(user);
@@ -121,6 +127,12 @@ public class UserServiceImpl implements UserService {
 
     private UserResponse createUser( UserRequest userRequest, UserRole userRole ) {
         User user = userMapper.toEntity(userRequest);
+        if ( user.getProfileImageId() != null ) {
+            boolean imagedExist = mediaServiceClient.imageExist(userRequest.getProfileImageId(), MediaType.USER);
+            if ( !imagedExist ) {
+                throw new ResourceNotFoundException("Image not found by id : " + userRequest.getProfileImageId());
+            }
+        }
         user.setRole(userRole);
         user.setEmailVerified(false);
         user.setPhoneVerified(false);
@@ -134,7 +146,7 @@ public class UserServiceImpl implements UserService {
 
     private UserResponse getUserById( String id, UserRole userRole ) {
         User user = userRepository.findByIdAndRole(id, userRole)
-                .orElseThrow(() -> new NoSuchElementException("Resource not found with id : " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id : " + id));
         if ( user.getStatus() == UserStatus.DELETED ) {
             throw new ResourceNotFoundException("User not found by id : " + id);
         }
