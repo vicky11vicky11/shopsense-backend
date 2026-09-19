@@ -8,6 +8,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -57,6 +59,10 @@ public class Order {
     @Column(name = "shipping_address_id", nullable = false)
     private String shippingAddressId;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItem> items = new ArrayList<>();
+
     @Version
     private Long version;
 
@@ -67,4 +73,14 @@ public class Order {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    public void addItem( OrderItem item ) {
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeItem( OrderItem item ) {
+        items.remove(item);
+        item.setOrder(null);
+    }
 }

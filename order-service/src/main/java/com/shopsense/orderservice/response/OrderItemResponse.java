@@ -1,13 +1,15 @@
 package com.shopsense.orderservice.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderItemResponse {
 
     private UUID id;
