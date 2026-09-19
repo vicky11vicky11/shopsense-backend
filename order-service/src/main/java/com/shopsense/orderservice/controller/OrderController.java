@@ -25,8 +25,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder( @RequestHeader("X-User-Id") String userId, @Valid @RequestBody CreateOrderRequest request ) {
-        OrderResponse response = orderService.createOrder(userId, request);
+    public ResponseEntity<OrderResponse> createOrder( @RequestHeader("X-User-Id") String userId, @RequestHeader("X-Idempotency-Key") String idempotencyKey, @Valid @RequestBody CreateOrderRequest request ) {
+        OrderResponse response = orderService.createOrder(userId, idempotencyKey, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
     }

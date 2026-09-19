@@ -1,8 +1,6 @@
 package com.shopsense.orderservice.config;
 
-import com.shopsense.orderservice.client.AddressServiceClient;
-import com.shopsense.orderservice.client.CustomerServiceClient;
-import com.shopsense.orderservice.client.ProductServiceClient;
+import com.shopsense.orderservice.client.*;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +39,36 @@ public class HttpInterfaceConfig {
         HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
                 .build();
         return httpServiceProxyFactory.createClient(CustomerServiceClient.class);
+    }
+
+    @Bean
+    public MediaServiceClient mediaServiceClient( @Qualifier("loadBalancedWebClientBuilder") WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.baseUrl("http://media-service")
+                .build();
+        WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
+                .build();
+        return httpServiceProxyFactory.createClient(MediaServiceClient.class);
+    }
+
+    @Bean
+    public InventoryServiceClient inventoryServiceClient( @Qualifier("loadBalancedWebClientBuilder") WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.baseUrl("http://inventory-service")
+                .build();
+        WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
+                .build();
+        return httpServiceProxyFactory.createClient(InventoryServiceClient.class);
+    }
+
+    @Bean
+    public StockReservationServiceClient stockReservationServiceClient( @Qualifier("loadBalancedWebClientBuilder") WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.baseUrl("http://inventory-service")
+                .build();
+        WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
+                .build();
+        return httpServiceProxyFactory.createClient(StockReservationServiceClient.class);
     }
 
 }

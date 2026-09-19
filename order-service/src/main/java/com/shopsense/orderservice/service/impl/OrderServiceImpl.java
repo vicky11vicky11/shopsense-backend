@@ -1,31 +1,34 @@
 package com.shopsense.orderservice.service.impl;
 
-import com.shopsense.orderservice.client.AddressServiceClient;
-import com.shopsense.orderservice.client.CustomerServiceClient;
-import com.shopsense.orderservice.client.ProductServiceClient;
+import com.shopsense.orderservice.client.*;
 import com.shopsense.orderservice.entity.Order;
+import com.shopsense.orderservice.entity.OrderIdempotency;
 import com.shopsense.orderservice.entity.OrderItem;
+import com.shopsense.orderservice.entity.OrderStatusHistory;
 import com.shopsense.orderservice.enums.OrderStatus;
+import com.shopsense.orderservice.enums.ReservationStatus;
 import com.shopsense.orderservice.exceptions.BadRequestException;
 import com.shopsense.orderservice.exceptions.ResourceNotFoundException;
 import com.shopsense.orderservice.mapper.OrderMapper;
+import com.shopsense.orderservice.repository.OrderIdempotencyRepository;
 import com.shopsense.orderservice.repository.OrderRepository;
+import com.shopsense.orderservice.repository.OrderStatusHistoryRepository;
 import com.shopsense.orderservice.request.CreateOrderRequest;
 import com.shopsense.orderservice.request.OrderItemRequest;
-import com.shopsense.orderservice.response.CartItemResponse;
-import com.shopsense.orderservice.response.CartResponse;
-import com.shopsense.orderservice.response.OrderResponse;
-import com.shopsense.orderservice.response.PageResponse;
+import com.shopsense.orderservice.request.ReserveStockRequest;
+import com.shopsense.orderservice.response.*;
 import com.shopsense.orderservice.service.CartService;
 import com.shopsense.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +40,17 @@ import java.util.UUID;
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
+    @Value("${order.tax-rate}")
+    private BigDecimal taxRate;
+
+    @Value("${order.shipping-rate}")
+    private BigDecimal shippingRate;
+
     private final OrderRepository orderRepository;
+
+    private final OrderIdempotencyRepository orderIdempotencyRepository;
+
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     private final CartService cartService;
 
@@ -49,125 +62,113 @@ public class OrderServiceImpl implements OrderService {
 
     private final ProductServiceClient productServiceClient;
 
+    private final MediaServiceClient mediaServiceClient;
+
+    private final StockReservationServiceClient stockReservationServiceClient;
+
     @Override
-    public OrderResponse createOrder( String userId, CreateOrderRequest request ) {
+    public OrderResponse createOrder( String userId, String idempotencyKey, CreateOrderRequest request ) {
         validateUser(userId);
+        OrderResponse existingOrder = findExistingOrder(userId, idempotencyKey);
+        if (existingOrder != null) {
+            return existingOrder;
+        }
         validateCreateOrderRequest(request);
         CartResponse cartResponse = cartService.getCart(userId);
         validateCartItems(cartResponse, request.getItems());
-        /*
-         * TODO:
-         *
-         * 1. Get the user's cart.
-         * 2. Validate that every requested product exists in the cart.
-         * 3. Validate requested quantity <= cart quantity.
-         * 4. Validate customer/user.
-         * 5. Fetch products from catalog service.
-         * 6. Validate products are active.
-         * 7. Get current product prices from catalog.
-         * 8. Reserve inventory.
-         *
-         * Since you are handling inter-service communication,
-         * those calls can be added here.
-         */
         String orderNumber = generateOrderNumber();
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal discountAmount = BigDecimal.ZERO;
-        BigDecimal shippingAmount = BigDecimal.ZERO;
-        BigDecimal taxAmount = BigDecimal.ZERO;
-        /*
-         * For now, these values are placeholders until catalog/
-         * pricing/shipping/tax communication is implemented.
-         */
         Order order = Order.builder()
                 .orderNumber(orderNumber)
                 .userId(userId)
                 .status(OrderStatus.PENDING_RESERVATION)
-                .subtotal(subtotal)
+                .subtotal(BigDecimal.ZERO)
                 .discountAmount(discountAmount)
-                .shippingAmount(shippingAmount)
-                .taxAmount(taxAmount)
-                .totalAmount(subtotal.subtract(discountAmount)
-                        .add(shippingAmount)
-                        .add(taxAmount))
-                .currency("INR")
+                .shippingAmount(BigDecimal.ZERO)
+                .taxAmount(BigDecimal.ZERO)
+                .totalAmount(BigDecimal.ZERO)
+                .currency(request.getCurrency())
                 .shippingAddressId(request.getShippingAddressId())
                 .build();
-        /*
-         * Create OrderItems.
-         *
-         * Product name, price, image etc. should eventually come
-         * from Catalog Service rather than the request.
-         */
         for ( OrderItemRequest itemRequest : request.getItems() ) {
-            /*
-             * TODO:
-             * Replace these values with Catalog Service response.
-             */
-            BigDecimal unitPrice = BigDecimal.ZERO;
+            ProductResponse productResponse = productServiceClient.getProduct(itemRequest.getProductId());
+            String productImageId = null;
+            String productImageUrl = null;
+            if ( productResponse.getProductImages() != null && !productResponse.getProductImages()
+                    .isEmpty() ) {
+                productImageId = productResponse.getProductImages()
+                        .stream()
+                        .filter(ProductMediaResponse::isPrimaryImage)
+                        .map(ProductMediaResponse::getMediaId)
+                        .findFirst()
+                        .orElse(productResponse.getProductImages()
+                                .getFirst()
+                                .getMediaId());
+            }
+            if ( productImageId != null ) {
+                productImageUrl = mediaServiceClient.getMedia(productImageId)
+                        .getSecureUrl();
+            }
+            BigDecimal unitPrice = productResponse.getPrice();
             BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
             OrderItem orderItem = OrderItem.builder()
-                    .productId(itemRequest.getProductId())
-                    .productName("Product")
-                    .productImageUrl(null)
+                    .productId(productResponse.getId())
+                    .productName(productResponse.getName())
+                    .productImageUrl(productImageUrl)
                     .unitPrice(unitPrice)
                     .quantity(itemRequest.getQuantity())
                     .lineTotal(lineTotal)
-                    .currency("INR")
+                    .currency(request.getCurrency())
                     .build();
             order.addItem(orderItem);
             subtotal = subtotal.add(lineTotal);
         }
-        /*
-         * Recalculate totals after adding items.
-         */
-        order.setSubtotal(subtotal);
-
-        order.setTotalAmount(subtotal.subtract(discountAmount)
+        BigDecimal taxRate = getTaxRate();
+        BigDecimal shippingRate = getShippingRate();
+        BigDecimal taxAmount = subtotal.multiply(taxRate)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal shippingAmount = subtotal.multiply(shippingRate)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = subtotal.subtract(discountAmount)
                 .add(shippingAmount)
-                .add(taxAmount));
-        /*
-         * TODO:
-         *
-         * Reserve inventory here.
-         *
-         * If reservation fails:
-         *   - do not create/keep the order
-         *   - throw appropriate exception
-         *
-         * If successful:
-         *   order.setInventoryReservationId(reservationId);
-         */
-
-        order.setStatus(OrderStatus.PAYMENT_PENDING);
-
-        Order savedOrder = orderRepository.save(order);
-
-        /*
-         * TODO:
-         *
-         * Remove ONLY the selected products from the cart.
-         *
-         * Do NOT clear the entire cart because this supports
-         * partial checkout.
-         *
-         * Example:
-         *
-         * Cart:
-         * A x2
-         * B x1
-         * C x3
-         * D x1
-         *
-         * Request:
-         * A x2
-         * C x3
-         *
-         * Remaining cart:
-         * B x1
-         * D x1
-         */
-
+                .add(taxAmount)
+                .setScale(2, RoundingMode.HALF_UP);
+        order.setSubtotal(subtotal.setScale(2, RoundingMode.HALF_UP));
+        order.setDiscountAmount(discountAmount.setScale(2, RoundingMode.HALF_UP));
+        order.setShippingAmount(shippingAmount);
+        order.setTaxAmount(taxAmount);
+        order.setTotalAmount(totalAmount);
+        order.setStatus(OrderStatus.PENDING_RESERVATION);
+        Order savedOrder = orderRepository.saveAndFlush(order);
+        saveStatusHistory(savedOrder, null, OrderStatus.PENDING_RESERVATION, "Order created", "Order created and waiting for stock reservation");
+        ReserveStockRequest reservationRequest = ReserveStockRequest.builder()
+                .orderId(savedOrder.getId())
+                .items(request.getItems()
+                        .stream()
+                        .map(item -> ReserveStockRequest.ReservationItem.builder()
+                                .productId(item.getProductId())
+                                .quantity(item.getQuantity())
+                                .build())
+                        .toList())
+                .build();
+        StockReservationResponse stockReservationResponse = stockReservationServiceClient.reserve(reservationRequest);
+        if ( !ReservationStatus.RESERVED.equals(stockReservationResponse.getStatus()) ) {
+            throw new BadRequestException("Unable to reserve stock for the order");
+        }
+        OrderStatus previousStatus = savedOrder.getStatus();
+        savedOrder.setStatus(OrderStatus.PAYMENT_PENDING);
+        savedOrder = orderRepository.saveAndFlush(savedOrder);
+        saveStatusHistory(savedOrder, previousStatus, OrderStatus.PAYMENT_PENDING, "Stock reserved", "Inventory stock successfully reserved for the order");
+        OrderIdempotency idempotency = OrderIdempotency.builder()
+                .userId(userId)
+                .idempotencyKey(idempotencyKey)
+                .order(savedOrder)
+                .build();
+        orderIdempotencyRepository.save(idempotency);
+        for ( OrderItemRequest item : request.getItems() ) {
+            cartService.removeItem(userId, item.getProductId());
+        }
         return orderMapper.toResponse(savedOrder);
     }
 
@@ -204,26 +205,19 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getOrders( String userId, PageRequest pageRequest ) {
-
         validateUser(userId);
-
         Page<Order> orderPage = orderRepository.findByUserId(userId, pageRequest);
-
         return PageResponse.from(orderPage, orderMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getOrdersByStatus( String userId, OrderStatus status, PageRequest pageRequest ) {
-
         validateUser(userId);
-
         if ( status == null ) {
             throw new IllegalArgumentException("Order status is required");
         }
-
         Page<Order> orderPage = orderRepository.findByUserIdAndStatus(userId, status, pageRequest);
-
         return PageResponse.from(orderPage, orderMapper::toResponse);
     }
 
@@ -233,17 +227,16 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
         validateCancellation(order);
-        /*
-         * TODO:
-         *
-         * If inventory was reserved:
-         *
-         * inventoryService.releaseReservation(
-         *      order.getInventoryReservationId()
-         * );
-         */
+        OrderStatus previousStatus = order.getStatus();
+        StockReservationResponse reservationResponse = stockReservationServiceClient.getByOrderId(order.getId());
+        if ( reservationResponse != null && reservationResponse.getItems() != null ) {
+            for ( StockReservationResponse.ReservationItemResponse item : reservationResponse.getItems() ) {
+                stockReservationServiceClient.release(item.getReservationId());
+            }
+        }
         order.setStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
+        Order savedOrder = orderRepository.saveAndFlush(order);
+        saveStatusHistory(savedOrder, previousStatus, OrderStatus.CANCELLED, "Order cancelled", "Order cancelled by customer");
     }
 
     private void validateCreateOrderRequest( CreateOrderRequest request ) {
@@ -338,5 +331,34 @@ public class OrderServiceImpl implements OrderService {
                 .substring(0, 6)
                 .toUpperCase();
         return "ORD-" + timestamp.substring(timestamp.length() - 10) + "-" + random;
+    }
+
+    private BigDecimal getTaxRate() {
+        return taxRate.movePointLeft(2);
+    }
+
+    private BigDecimal getShippingRate() {
+        return shippingRate.movePointLeft(2);
+    }
+
+    private OrderResponse findExistingOrder( String userId, String idempotencyKey ) {
+        if ( idempotencyKey == null || idempotencyKey.isBlank() ) {
+            throw new BadRequestException("Idempotency-Key is required");
+        }
+        return orderIdempotencyRepository.findByUserIdAndIdempotencyKey(userId, idempotencyKey)
+                .map(OrderIdempotency::getOrder)
+                .map(orderMapper::toResponse)
+                .orElse(null);
+    }
+
+    private void saveStatusHistory( Order order, OrderStatus fromStatus, OrderStatus toStatus, String reason, String description ) {
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .fromStatus(fromStatus)
+                .toStatus(toStatus)
+                .reason(reason)
+                .description(description)
+                .build();
+        orderStatusHistoryRepository.save(history);
     }
 }

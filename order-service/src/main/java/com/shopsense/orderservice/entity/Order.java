@@ -53,15 +53,16 @@ public class Order {
     @Column(nullable = false, length = 3)
     private String currency;
 
-    @Column(name = "inventory_reservation_id")
-    private UUID inventoryReservationId;
-
     @Column(name = "shipping_address_id", nullable = false)
     private String shippingAddressId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderStatusHistory> statusHistory = new ArrayList<>();
 
     @Version
     private Long version;
@@ -82,5 +83,10 @@ public class Order {
     public void removeItem( OrderItem item ) {
         items.remove(item);
         item.setOrder(null);
+    }
+
+    public void addStatusHistory( OrderStatusHistory history ) {
+        statusHistory.add(history);
+        history.setOrder(this);
     }
 }

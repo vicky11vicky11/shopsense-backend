@@ -63,3 +63,5 @@ eureka:
 order:
     cart-key-prefix: ${REDIS_CART_KEY_PREFIX}
     cart-ttl-days: ${REDIS_CART_TTL_DAYS}
+    tax-rate: ${ORDER_TAX_RATE}
+    shipping-rate: ${ORDER_SHIPPING_RATE}

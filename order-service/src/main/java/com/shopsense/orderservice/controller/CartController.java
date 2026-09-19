@@ -40,9 +40,10 @@ public class CartController {
     }
 
     @DeleteMapping("/items/{productId}")
-    public ResponseEntity<CartResponse> removeItem( @RequestHeader("X-User-Id") String userId, @PathVariable UUID productId ) {
-        CartResponse cartResponse = cartService.removeItem(userId, productId);
-        return ResponseEntity.ok(cartResponse);
+    public ResponseEntity<Void> removeItem( @RequestHeader("X-User-Id") String userId, @PathVariable UUID productId ) {
+        cartService.removeItem(userId, productId);
+        return ResponseEntity.noContent()
+                .build();
     }
 
     @DeleteMapping

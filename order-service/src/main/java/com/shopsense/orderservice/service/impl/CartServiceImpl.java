@@ -95,7 +95,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartResponse removeItem( String userId, UUID productId ) {
+    public void removeItem( String userId, UUID productId ) {
         validateCustomer(userId);
         String cartKey = getCartKey(userId);
         CartItem existingItem = getCartItem(cartKey, productId);
@@ -106,7 +106,6 @@ public class CartServiceImpl implements CartService {
                 .delete(cartKey, productId.toString());
         refreshCartTtl(cartKey);
         log.info("Cart item removed successfully: userId={}, productId={}", userId, productId);
-        return getCart(userId);
     }
 
     @Override

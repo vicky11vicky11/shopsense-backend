@@ -33,11 +33,11 @@ public class OrderResponse {
 
     private String currency;
 
-    private UUID inventoryReservationId;
-
     private String shippingAddressId;
 
     private List<OrderItemResponse> items;
+
+    private List<OrderStatusHistoryResponse> statusHistory;
 
     private Instant createdAt;
 
