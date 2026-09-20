@@ -1,0 +1,47 @@
+info:
+    app:
+        name: ${spring.application.name}
+        description: API Gateway for ShopSense microservices
+        version: 1.0.0
+server:
+    port: 8080
+    shutdown: graceful
+spring:
+    main:
+        web-application-type: reactive
+    application:
+        name: gateway-service
+    lifecycle:
+        timeout-per-shutdown-phase: 30s
+    data:
+        redis:
+            host: ${REDIS_HOST}
+            port: ${REDIS_PORT}
+            username: ${REDIS_USERNAME}
+            password: ${REDIS_PASSWORD}
+            database: ${REDIS_GATEWAY_INDEX}
+    cloud:
+        loadbalancer:
+            enabled: true
+eureka:
+    instance:
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${server.port}
+        lease-renewal-interval-in-seconds: 30
+        lease-expiration-duration-in-seconds: 90
+    client:
+        service-url:
+            defaultZone: ${EUREKA_URL}
+        register-with-eureka: true
+        fetch-registry: true
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info,metrics,gateway,prometheus
+    endpoint:
+        health:
+            show-details: always
+    info:
+        env:
+            enabled: true
