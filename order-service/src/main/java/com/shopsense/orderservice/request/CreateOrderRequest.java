@@ -15,9 +15,8 @@ public class CreateOrderRequest {
     @NotBlank
     private String shippingAddressId;
 
-    @Valid
     @NotEmpty(message = "At least one product is required")
-    private List<OrderItemRequest> items;
+    private List<@Valid OrderItemRequest> items;
 
     @NotBlank
     private String currency;
