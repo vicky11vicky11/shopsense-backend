@@ -38,10 +38,36 @@ management:
     endpoints:
         web:
             exposure:
-                include: health,info,metrics,gateway,prometheus
+                include: health,info,metrics,env,prometheus
     endpoint:
         health:
             show-details: always
     info:
         env:
             enabled: true
+    tracing:
+        sampling:
+            probability: 1.0
+    otlp:
+        metrics:
+            export:
+                enabled: false
+    opentelemetry:
+        resource-attributes:
+            service.name: ${spring.application.name}
+        tracing:
+            export:
+                otlp:
+                    endpoint: http://localhost:4318/v1/traces
+    prometheus:
+        metrics:
+            export:
+                enabled: true
+logging:
+    file:
+        name: ./deploy/logs/${spring.application.name}.log
+    pattern:
+        correlation: "[%X{traceId:-},%X{spanId:-}]"
+    level:
+        root: info
+        com.shopsense: trace

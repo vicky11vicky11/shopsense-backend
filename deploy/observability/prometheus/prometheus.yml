@@ -1,0 +1,42 @@
+global:
+    scrape_interval: 15s
+    evaluation_interval: 15s
+    external_labels:
+        application: shopsense
+        environment: local
+scrape_configs:
+    # ============================================================
+    # ShopSense services discovered through Eureka
+    # ============================================================
+    -   job_name: "shopsense-services"
+        eureka_sd_configs:
+            -   server: "http://host.docker.internal:8761/eureka"
+                refresh_interval: 30s
+        metrics_path: "/actuator/prometheus"
+        relabel_configs:
+            # ----------------------------------------------------------
+            # Only monitor these ShopSense services
+            # ----------------------------------------------------------
+            -   source_labels: [ __meta_eureka_app_name ]
+                regex: "GATEWAY-SERVICE|USER-SERVICE|CATALOG-SERVICE|INVENTORY-SERVICE|ORDER-SERVICE|PAYMENT-SERVICE|NOTIFICATION-SERVICE|MEDIA-SERVICE"
+                action: keep
+            # ----------------------------------------------------------
+            # Eureka application name -> service label
+            # ----------------------------------------------------------
+            -   source_labels: [ __meta_eureka_app_name ]
+                target_label: service
+            # ----------------------------------------------------------
+            # Eureka instance ID -> instance label
+            # ----------------------------------------------------------
+            -   source_labels: [ __meta_eureka_app_instance_id ]
+                target_label: instance
+            # ----------------------------------------------------------
+            # Instance hostname
+            # ----------------------------------------------------------
+            -   source_labels: [ __meta_eureka_app_instance_hostname ]
+                target_label: hostname
+            # ----------------------------------------------------------
+            # Instance IP
+            # ----------------------------------------------------------
+            -   source_labels: [ __meta_eureka_app_instance_ip_addr ]
+                target_label: ip

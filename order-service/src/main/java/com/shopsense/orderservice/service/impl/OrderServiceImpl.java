@@ -70,7 +70,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse createOrder( String userId, String idempotencyKey, CreateOrderRequest request ) {
         validateUser(userId);
         OrderResponse existingOrder = findExistingOrder(userId, idempotencyKey);
-        if (existingOrder != null) {
+        if ( existingOrder != null ) {
             return existingOrder;
         }
         validateCreateOrderRequest(request);
@@ -169,6 +169,7 @@ public class OrderServiceImpl implements OrderService {
         for ( OrderItemRequest item : request.getItems() ) {
             cartService.removeItem(userId, item.getProductId());
         }
+        log.info("Order created successfully: orderId={}, orderNumber={}, userId={}, status={}", savedOrder.getId(), savedOrder.getOrderNumber(), userId, savedOrder.getStatus());
         return orderMapper.toResponse(savedOrder);
     }
 
@@ -178,6 +179,7 @@ public class OrderServiceImpl implements OrderService {
         validateUser(userId);
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        log.info("Order fetched successfully: orderId={}, userId={}", orderId, userId);
         return orderMapper.toResponse(order);
     }
 
@@ -190,6 +192,7 @@ public class OrderServiceImpl implements OrderService {
         if ( !userId.equals(order.getUserId()) ) {
             throw new ResourceNotFoundException("Order not found with order number: " + orderNumber);
         }
+        log.info("Order fetched successfully: orderNumber={}, userId={}", orderNumber, userId);
         return orderMapper.toResponse(order);
     }
 
@@ -199,7 +202,9 @@ public class OrderServiceImpl implements OrderService {
         if ( orderId == null ) {
             return false;
         }
-        return orderRepository.existsById(orderId);
+        boolean exists = orderRepository.existsById(orderId);
+        log.info("Order existence check completed: orderId={}, exists={}", orderId, exists);
+        return exists;
     }
 
     @Override
@@ -207,6 +212,7 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderResponse> getOrders( String userId, PageRequest pageRequest ) {
         validateUser(userId);
         Page<Order> orderPage = orderRepository.findByUserId(userId, pageRequest);
+        log.info("Orders fetched successfully: userId={}, page={}, size={}, totalElements={}", userId, pageRequest.getPageNumber(), pageRequest.getPageSize(), orderPage.getTotalElements());
         return PageResponse.from(orderPage, orderMapper::toResponse);
     }
 
@@ -218,6 +224,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalArgumentException("Order status is required");
         }
         Page<Order> orderPage = orderRepository.findByUserIdAndStatus(userId, status, pageRequest);
+        log.info("Orders fetched by status: userId={}, status={}, page={}, size={}, totalElements={}", userId, status, pageRequest.getPageNumber(), pageRequest.getPageSize(), orderPage.getTotalElements());
         return PageResponse.from(orderPage, orderMapper::toResponse);
     }
 
@@ -237,6 +244,7 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.saveAndFlush(order);
         saveStatusHistory(savedOrder, previousStatus, OrderStatus.CANCELLED, "Order cancelled", "Order cancelled by customer");
+        log.info("Order cancelled successfully: orderId={}, orderNumber={}, userId={}, previousStatus={}, status={}", orderId, savedOrder.getOrderNumber(), userId, previousStatus, savedOrder.getStatus());
     }
 
     private void validateCreateOrderRequest( CreateOrderRequest request ) {

@@ -109,6 +109,89 @@ services:
             interval: 5s
             timeout: 5s
             retries: 50
+    prometheus:
+        container_name: prometheus
+        image: prom/prometheus:v3.13.3
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "9090:9090"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+            - /home/vicky/Projects/ShopSense/data/prometheus:/prometheus:z
+        command:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time=15d"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        networks:
+            - dev_network
+    loki:
+        container_name: loki
+        image: grafana/loki:3.7.8
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "3100:3100"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/loki/loki-config.yml:/etc/loki/loki-config.yml:ro,z
+            - /home/vicky/Projects/ShopSense/data/loki:/loki:z
+        command:
+            - "-config.file=/etc/loki/loki-config.yml"
+        networks:
+            - dev_network
+    tempo:
+        container_name: tempo
+        image: grafana/tempo:3.0.3
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "3200:3200"
+            - "4317:4317"
+            - "4318:4318"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/tempo/tempo.yml:/etc/tempo/tempo.yml:ro,z
+            - /home/vicky/Projects/ShopSense/data/tempo:/var/tempo:z
+        command:
+            - "-config.file=/etc/tempo/tempo.yml"
+        networks:
+            - dev_network
+    grafana:
+        container_name: grafana
+        image: grafana/grafana:13.2
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "3000:3000"
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/grafana:/var/lib/grafana:z
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro,z
+        depends_on:
+            - prometheus
+            - loki
+            - tempo
+        networks:
+            - dev_network
+    alloy:
+        container_name: alloy
+        image: grafana/alloy:v1.19.0
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "12345:12345"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/alloy/config.alloy:/etc/alloy/config.alloy:ro,z
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/shopsense:ro,z
+            - /home/vicky/Projects/ShopSense/data/alloy:/var/lib/alloy:z
+        command:
+            - "run"
+            - "/etc/alloy/config.alloy"
+            - "--server.http.listen-addr=0.0.0.0:12345"
+        depends_on:
+            - loki
+        networks:
+            - dev_network
 networks:
     dev_network:
         driver: bridge

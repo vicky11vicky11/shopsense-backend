@@ -1,8 +1,9 @@
 package com.shopsense.inventoryservice.config;
 
-import com.shopsense.inventoryservice.client.ProductServiceClient;
 import com.shopsense.inventoryservice.client.OrderServiceClient;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.shopsense.inventoryservice.client.ProductServiceClient;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -10,25 +11,32 @@ import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
+@RequiredArgsConstructor
 public class HttpInterfaceConfig {
 
+    private final ReactorLoadBalancerExchangeFilterFunction loadBalancerFilter;
+
     @Bean
-    public ProductServiceClient productServiceClient( @Qualifier("loadBalancedWebClientBuilder") WebClient.Builder webClientBuilder ) {
-        WebClient webClient = webClientBuilder.baseUrl("http://catalog-service")
+    public ProductServiceClient productServiceClient( WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.clone()
+                .baseUrl("http://catalog-service")
+                .filter(loadBalancerFilter)
                 .build();
-        WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
-        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
+        WebClientAdapter adapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter)
                 .build();
-        return httpServiceProxyFactory.createClient(ProductServiceClient.class);
+        return factory.createClient(ProductServiceClient.class);
     }
 
     @Bean
-    public OrderServiceClient orderServiceClient( @Qualifier("loadBalancedWebClientBuilder") WebClient.Builder webClientBuilder ) {
-        WebClient webClient = webClientBuilder.baseUrl("http://order-service")
+    public OrderServiceClient orderServiceClient( WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.clone()
+                .baseUrl("http://order-service")
+                .filter(loadBalancerFilter)
                 .build();
-        WebClientAdapter webClientAdapter = WebClientAdapter.create(webClient);
-        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
+        WebClientAdapter adapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter)
                 .build();
-        return httpServiceProxyFactory.createClient(OrderServiceClient.class);
+        return factory.createClient(OrderServiceClient.class);
     }
 }
