@@ -41,6 +41,11 @@ public class GatewayRouteConfig {
                                 .setKeyResolver(userOrIpKeyResolver)))
                         .uri(ServiceName.INVENTORY))
 
+                .route("payment-service", route -> route.path("/api/v1/payments/**")
+                        .filters(filters -> filters.requestRateLimiter(config -> config.setRateLimiter(redisRateLimiter)
+                                .setKeyResolver(userOrIpKeyResolver)))
+                        .uri(ServiceName.PAYMENT))
+
                 .build();
     }
 }
