@@ -1,8 +1,10 @@
 package com.shopsense.orderservice.request;
 
+import com.shopsense.orderservice.enums.Currency;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +20,6 @@ public class CreateOrderRequest {
     @NotEmpty(message = "At least one product is required")
     private List<@Valid OrderItemRequest> items;
 
-    @NotBlank
-    private String currency;
+    @NotNull
+    private Currency currency;
 }

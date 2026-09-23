@@ -1,5 +1,6 @@
 package com.shopsense.orderservice.entity;
 
+import com.shopsense.orderservice.enums.Currency;
 import com.shopsense.orderservice.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -51,8 +52,9 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal totalAmount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
-    private String currency;
+    private Currency currency;
 
     @Column(name = "shipping_address_id", nullable = false)
     private String shippingAddressId;

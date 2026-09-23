@@ -1,5 +1,6 @@
 package com.shopsense.orderservice.entity;
 
+import com.shopsense.orderservice.enums.Currency;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -44,8 +45,9 @@ public class OrderItem {
     @Column(name = "line_total", nullable = false, precision = 19, scale = 2)
     private BigDecimal lineTotal;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
-    private String currency;
+    private Currency currency;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

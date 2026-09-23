@@ -16,6 +16,7 @@ import com.shopsense.orderservice.repository.OrderStatusHistoryRepository;
 import com.shopsense.orderservice.request.CreateOrderRequest;
 import com.shopsense.orderservice.request.OrderItemRequest;
 import com.shopsense.orderservice.request.ReserveStockRequest;
+import com.shopsense.orderservice.request.UpdateOrderStatusRequest;
 import com.shopsense.orderservice.response.*;
 import com.shopsense.orderservice.service.CartService;
 import com.shopsense.orderservice.service.OrderService;
@@ -229,6 +230,24 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public OrderResponse updateOrderStatus( String userId, UUID orderId, UpdateOrderStatusRequest request ) {
+        validateUser(userId);
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        OrderStatus currentStatus = order.getStatus();
+        OrderStatus newStatus = request.getStatus();
+        validateStatusTransition(currentStatus, newStatus);
+        if ( currentStatus == newStatus ) {
+            return orderMapper.toResponse(order);
+        }
+        order.setStatus(newStatus);
+        Order savedOrder = orderRepository.saveAndFlush(order);
+        saveStatusHistory(savedOrder, currentStatus, newStatus, request.getReason(), request.getDescription());
+        log.info("Order status updated: orderId={}, userId={}, fromStatus={}, toStatus={}", orderId, userId, currentStatus, newStatus);
+        return orderMapper.toResponse(savedOrder);
+    }
+
+    @Override
     public void cancelOrder( String userId, UUID orderId ) {
         validateUser(userId);
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
@@ -328,6 +347,33 @@ public class OrderServiceImpl implements OrderService {
         }
         if ( status == OrderStatus.DELIVERED ) {
             throw new IllegalStateException("Delivered order cannot be cancelled");
+        }
+    }
+
+    private void validateStatusTransition( OrderStatus currentStatus, OrderStatus newStatus ) {
+        if ( currentStatus == OrderStatus.CANCELLED ) {
+            throw new BadRequestException("Cancelled order cannot change status");
+        }
+        if ( currentStatus == OrderStatus.DELIVERED ) {
+            throw new BadRequestException("Delivered order cannot change status");
+        }
+        if ( currentStatus == OrderStatus.SHIPPED && newStatus != OrderStatus.DELIVERED ) {
+            throw new BadRequestException("Shipped order can only move to DELIVERED");
+        }
+        if ( currentStatus == OrderStatus.PROCESSING && newStatus != OrderStatus.SHIPPED ) {
+            throw new BadRequestException("Processing order can only move to SHIPPED");
+        }
+        if ( currentStatus == OrderStatus.CONFIRMED && newStatus != OrderStatus.PROCESSING ) {
+            throw new BadRequestException("Confirmed order can only move to PROCESSING");
+        }
+        if ( currentStatus == OrderStatus.PAYMENT_PENDING && newStatus != OrderStatus.CONFIRMED && newStatus != OrderStatus.PAYMENT_FAILED && newStatus != OrderStatus.CANCELLED ) {
+            throw new BadRequestException("Payment pending order can only become CONFIRMED, PAYMENT_FAILED or CANCELLED");
+        }
+        if ( currentStatus == OrderStatus.PAYMENT_FAILED && newStatus != OrderStatus.PAYMENT_PENDING && newStatus != OrderStatus.CANCELLED ) {
+            throw new BadRequestException("Payment failed order can only return to PAYMENT_PENDING or become CANCELLED");
+        }
+        if ( currentStatus == OrderStatus.RESERVED && newStatus != OrderStatus.PAYMENT_PENDING && newStatus != OrderStatus.CANCELLED ) {
+            throw new BadRequestException("Reserved order can only move to PAYMENT_PENDING or CANCELLED");
         }
     }
 

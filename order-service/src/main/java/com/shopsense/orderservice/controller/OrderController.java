@@ -2,6 +2,7 @@ package com.shopsense.orderservice.controller;
 
 import com.shopsense.orderservice.enums.OrderStatus;
 import com.shopsense.orderservice.request.CreateOrderRequest;
+import com.shopsense.orderservice.request.UpdateOrderStatusRequest;
 import com.shopsense.orderservice.response.OrderResponse;
 import com.shopsense.orderservice.response.PageResponse;
 import com.shopsense.orderservice.service.OrderService;
@@ -59,6 +60,12 @@ public class OrderController {
     public ResponseEntity<PageResponse<OrderResponse>> getOrdersByStatus( @RequestHeader("X-User-Id") String userId, @PathVariable OrderStatus status, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) PageRequest pageRequest ) {
         PageResponse<OrderResponse> orderResponse = orderService.getOrdersByStatus(userId, status, pageRequest);
         return ResponseEntity.ok(orderResponse);
+    }
+
+    @PatchMapping("/{orderId}/status")
+    public ResponseEntity<OrderResponse> updateOrderStatus( @RequestHeader("X-User-Id") String userId, @PathVariable UUID orderId, @Valid @RequestBody UpdateOrderStatusRequest request ) {
+        OrderResponse response = orderService.updateOrderStatus(userId, orderId, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{orderId}/cancel")

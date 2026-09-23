@@ -2,6 +2,7 @@ package com.shopsense.orderservice.service;
 
 import com.shopsense.orderservice.enums.OrderStatus;
 import com.shopsense.orderservice.request.CreateOrderRequest;
+import com.shopsense.orderservice.request.UpdateOrderStatusRequest;
 import com.shopsense.orderservice.response.OrderResponse;
 import com.shopsense.orderservice.response.PageResponse;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,8 @@ public interface OrderService {
     PageResponse<OrderResponse> getOrders( String userId, PageRequest pageRequest );
 
     PageResponse<OrderResponse> getOrdersByStatus( String userId, OrderStatus status, PageRequest pageRequest );
+
+    OrderResponse updateOrderStatus( String userId, UUID orderId, UpdateOrderStatusRequest request );
 
     void cancelOrder( String userId, UUID orderId );
 }
