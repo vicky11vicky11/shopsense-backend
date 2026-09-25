@@ -5,8 +5,8 @@ import com.shopsense.inventoryservice.entity.Inventory;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.enums.StockMovementType;
 import com.shopsense.inventoryservice.enums.StockStatus;
-import com.shopsense.inventoryservice.exceptions.InventoryNotFoundException;
-import com.shopsense.inventoryservice.exceptions.ResourceNotFoundException;
+import com.shopsense.inventoryservice.exception.InventoryNotFoundException;
+import com.shopsense.inventoryservice.exception.ResourceNotFoundException;
 import com.shopsense.inventoryservice.mapper.InventoryMapper;
 import com.shopsense.inventoryservice.repository.InventoryRepository;
 import com.shopsense.inventoryservice.repository.StockMovementRepository;
@@ -20,6 +20,7 @@ import com.shopsense.inventoryservice.response.StockMovementResponse;
 import com.shopsense.inventoryservice.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
+
+    @Value("${inventory.default-low-stock-threshold}")
+    private Integer DEFAULT_LOW_STOCK_THRESHOLD;
 
     private final InventoryRepository inventoryRepository;
 
@@ -51,7 +55,7 @@ public class InventoryServiceImpl implements InventoryService {
         }
         Inventory inventory = inventoryMapper.toEntity(request);
         if ( inventory.getLowStockThreshold() == null ) {
-            inventory.setLowStockThreshold(5);
+            inventory.setLowStockThreshold(DEFAULT_LOW_STOCK_THRESHOLD);
         }
         Inventory saved = inventoryRepository.saveAndFlush(inventory);
         if ( saved.getQuantity() > 0 ) {
@@ -87,7 +91,7 @@ public class InventoryServiceImpl implements InventoryService {
             throw new IllegalArgumentException("Quantity cannot be less than reserved quantity");
         }
         inventory.setQuantity(newQuantity);
-        if ( request.getLowStockThreshold() != null ) {
+        if ( request.getLowStockThreshold() != null ) { 
             inventory.setLowStockThreshold(request.getLowStockThreshold());
         }
         Inventory updated = inventoryRepository.saveAndFlush(inventory);

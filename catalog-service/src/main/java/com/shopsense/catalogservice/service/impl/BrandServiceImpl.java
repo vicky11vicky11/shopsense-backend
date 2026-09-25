@@ -3,8 +3,8 @@ package com.shopsense.catalogservice.service.impl;
 import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Brand;
 import com.shopsense.catalogservice.enums.MediaType;
-import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
-import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
+import com.shopsense.catalogservice.exception.ResourceAlreadyExistsException;
+import com.shopsense.catalogservice.exception.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.BrandMapper;
 import com.shopsense.catalogservice.repository.BrandRepository;
 import com.shopsense.catalogservice.request.BrandRequest;
@@ -120,16 +120,16 @@ public class BrandServiceImpl implements BrandService {
 
     private Brand findBrandById( UUID brandId ) {
         return brandRepository.findById(brandId)
-                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with id: " + brandId));
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found"));
     }
 
-    private void validateBrandImage( String brandImageId ) {
+    private void validateBrandImage( UUID brandImageId ) {
         if ( brandImageId == null ) {
             return;
         }
         boolean imageExist = mediaServiceClient.imageExist(brandImageId, MediaType.BRAND);
         if ( !imageExist ) {
-            throw new ResourceNotFoundException("Brand image not found with id: " + brandImageId);
+            throw new ResourceNotFoundException("Brand image not found");
         }
     }
 }

@@ -4,9 +4,9 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.shopsense.mediaservice.entity.Media;
 import com.shopsense.mediaservice.enums.MediaType;
-import com.shopsense.mediaservice.exceptions.InvalidFileException;
-import com.shopsense.mediaservice.exceptions.MediaNotFoundException;
-import com.shopsense.mediaservice.exceptions.MediaUploadException;
+import com.shopsense.mediaservice.exception.InvalidFileException;
+import com.shopsense.mediaservice.exception.MediaNotFoundException;
+import com.shopsense.mediaservice.exception.MediaUploadException;
 import com.shopsense.mediaservice.repository.MediaRepository;
 import com.shopsense.mediaservice.request.BulkMediaUploadRequest;
 import com.shopsense.mediaservice.request.MediaRequest;
@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -73,13 +75,20 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public MediaDetailsResponse getImage( String id ) {
+    public Map<MediaType,List<MediaDetailsResponse>> getAllImages() {
+        List<Media> mediaList = mediaRepository.findAll();
+        log.info("{} media records found", mediaList.size());
+        return mediaList.stream().map(this::buildMediaDetailsResponse).collect(Collectors.groupingBy(MediaDetailsResponse::getMediaType));
+    }
+
+    @Override
+    public MediaDetailsResponse getImage( UUID id ) {
         Media media = findMediaById(id);
         return buildMediaDetailsResponse(media);
     }
 
     @Override
-    public List<MediaDetailsResponse> getImages( List<String> ids ) {
+    public List<MediaDetailsResponse> getImages( List<UUID> ids ) {
         List<Media> mediaList = mediaRepository.findAllByIdIn(ids);
         return mediaList.stream()
                 .map(this::buildMediaDetailsResponse)
@@ -87,14 +96,14 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public boolean isImageExist( String id, MediaType mediaType ) {
+    public boolean isImageExist( UUID id, MediaType mediaType ) {
         boolean exists = mediaRepository.existsByIdAndMediaType(id, mediaType);
         log.info("Image with id: {} and type : {} exists : {}", id, mediaType, exists);
         return exists;
     }
 
     @Override
-    public MediaResponse updateImage( String id, MediaUpdateRequest mediaUpdateRequest ) {
+    public MediaResponse updateImage( UUID id, MediaUpdateRequest mediaUpdateRequest ) {
         MultipartFile image = mediaUpdateRequest.getImage();
         validateImage(image);
         Media media = findMediaById(id);
@@ -115,7 +124,7 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public void deleteImage( String id ) {
+    public void deleteImage( UUID id ) {
         Media media = findMediaById(id);
         log.info("Deleting media with ID: {}", id);
         mediaRepository.delete(media);
@@ -177,9 +186,9 @@ public class MediaServiceImpl implements MediaService {
         }
     }
 
-    private Media findMediaById( String id ) {
+    private Media findMediaById( UUID id ) {
         return mediaRepository.findById(id)
-                .orElseThrow(() -> new MediaNotFoundException("Media not found with ID: " + id));
+                .orElseThrow(() -> new MediaNotFoundException("Media not found"));
     }
 
     private Media buildMedia( Map<?, ?> uploadResult, MediaType mediaType ) {

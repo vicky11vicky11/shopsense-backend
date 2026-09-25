@@ -1,6 +1,6 @@
 package com.shopsense.gatewayservice.config;
 
-import com.shopsense.gatewayservice.utils.ServiceName;
+import com.shopsense.gatewayservice.util.ServiceName;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;

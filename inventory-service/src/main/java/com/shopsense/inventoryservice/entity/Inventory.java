@@ -32,9 +32,8 @@ public class Inventory {
     @Column(name = "reserved_quantity", nullable = false)
     private Integer reservedQuantity = 0;
 
-    @Builder.Default
     @Column(name = "low_stock_threshold", nullable = false)
-    private Integer lowStockThreshold = 5;
+    private Integer lowStockThreshold;
 
     @Version
     private Long version;

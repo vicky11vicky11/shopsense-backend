@@ -16,7 +16,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
 
     boolean existsByProductId( UUID productId );
 
-    @Modifying
+    List<Inventory> findByProductIdIn( List<UUID> productIds );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 UPDATE Inventory i
                 SET i.reservedQuantity =
@@ -26,7 +28,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
             """)
     int reserveStock( @Param("productId") UUID productId, @Param("quantity") Integer quantity );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 UPDATE Inventory i
                 SET i.reservedQuantity =
@@ -36,7 +38,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
             """)
     int releaseStock( @Param("productId") UUID productId, @Param("quantity") Integer quantity );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 UPDATE Inventory i
                 SET i.quantity = i.quantity - :quantity,
@@ -47,7 +49,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
             """)
     int consumeStock( @Param("productId") UUID productId, @Param("quantity") Integer quantity );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
                 UPDATE Inventory i
                 SET i.quantity = i.quantity + :quantity
@@ -55,6 +57,4 @@ public interface InventoryRepository extends JpaRepository<Inventory, UUID> {
                   AND i.quantity + :quantity >= i.reservedQuantity
             """)
     int adjustStock( @Param("productId") UUID productId, @Param("quantity") Integer quantity );
-
-    List<Inventory> findByProductIdIn( List<UUID> productIds);
 }

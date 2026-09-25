@@ -26,4 +26,5 @@ public class HttpInterfaceConfig {
                 .build();
         return factory.createClient(MediaServiceClient.class);
     }
+
 }

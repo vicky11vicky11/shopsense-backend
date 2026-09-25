@@ -14,13 +14,13 @@ public class StoreResponse {
 
     private UUID id;
 
-    private String sellerId;
+    private UUID sellerId;
 
-    private String addressId;
+    private UUID addressId;
 
     private String storeName;
 
-    private String storeImageId;
+    private UUID storeImageId;
 
     private boolean active;
 

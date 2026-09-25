@@ -3,7 +3,7 @@ package com.shopsense.inventoryservice.controller;
 import com.shopsense.inventoryservice.request.ReserveStockRequest;
 import com.shopsense.inventoryservice.response.StockReservationResponse;
 import com.shopsense.inventoryservice.service.StockReservationService;
-import com.shopsense.inventoryservice.utils.AppUrl;
+import com.shopsense.inventoryservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,6 +48,20 @@ public class StockReservationController {
     @PostMapping("/{reservationId}/consume")
     public ResponseEntity<Void> consume( @PathVariable UUID reservationId ) {
         reservationService.consume(reservationId);
+        return ResponseEntity.noContent()
+                .build();
+    }
+
+    @PostMapping("/order/{orderId}/release")
+    public ResponseEntity<Void> releaseByOrder( @PathVariable UUID orderId ) {
+        reservationService.releaseByOrder(orderId);
+        return ResponseEntity.noContent()
+                .build();
+    }
+
+    @PostMapping("/order/{orderId}/consume")
+    public ResponseEntity<Void> consumeByOrder( @PathVariable UUID orderId ) {
+        reservationService.consumeByOrder(orderId);
         return ResponseEntity.noContent()
                 .build();
     }

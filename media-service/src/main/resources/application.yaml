@@ -23,8 +23,10 @@ spring:
         port: ${MONGODB_PORT}
         username: ${MONGODB_USERNAME}
         password: ${MONGODB_PASSWORD}
-        database: ${MEDIA_DATABASE}
+        database: ${MEDIA_SERVICE_DATABASE}
         authentication-database: ${MONGODB_AUTHENTICATION_DATABASE}
+        representation:
+            uuid: standard
     data:
         mongodb:
             auto-index-creation: true
@@ -52,7 +54,7 @@ management:
         tracing:
             export:
                 otlp:
-                    endpoint: http://localhost:4318/v1/traces
+                    endpoint: ${TEMPO_URL}
     prometheus:
         metrics:
             export:

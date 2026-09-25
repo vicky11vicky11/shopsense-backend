@@ -7,11 +7,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface MediaRepository extends MongoRepository<Media, String> {
+public interface MediaRepository extends MongoRepository<Media, UUID> {
 
-    List<Media> findAllByIdIn( List<String> ids );
+    List<Media> findAllByIdIn( List<UUID> ids );
 
-    boolean existsByIdAndMediaType( String id, MediaType mediaType );
+    boolean existsByIdAndMediaType( UUID id, MediaType mediaType );
 }

@@ -13,9 +13,9 @@ import java.util.*;
 @Repository
 public interface ProductMediaRepository extends JpaRepository<ProductMedia, UUID> {
 
-    boolean existsByProductIdAndMediaId( UUID productId, String mediaId );
+    boolean existsByProductIdAndMediaId( UUID productId, UUID mediaId );
 
-    List<ProductMedia> findByProductIdAndMediaIdIn( UUID productId, Set<String> mediaIds );
+    List<ProductMedia> findByProductIdAndMediaIdIn( UUID productId, Set<UUID> mediaIds );
     
     Optional<ProductMedia> findByProductIdAndPrimaryImageTrue( UUID productId );
 

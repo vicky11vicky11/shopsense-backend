@@ -17,4 +17,5 @@ public class TraceCaptureConfig {
         registration.setOrder(Integer.MAX_VALUE);
         return registration;
     }
+
 }

@@ -23,7 +23,7 @@ spring:
             mode: always
             schema-locations: classpath:db/schema.sql
     datasource:
-        url: ${INVENTORY_POSTGRES_URL}
+        url: ${POSTGRES_URL}/${INVENTORY_SERVICE_DATABASE}
         username: ${POSTGRES_USERNAME}
         password: ${POSTGRES_PASSWORD}
         driver-class-name: org.postgresql.Driver
@@ -55,7 +55,7 @@ management:
         tracing:
             export:
                 otlp:
-                    endpoint: http://localhost:4318/v1/traces
+                    endpoint: ${TEMPO_URL}
     prometheus:
         metrics:
             export:
@@ -81,3 +81,5 @@ eureka:
         fetch-registry: true
 reservation:
     expiry: ${RESERVATION_DURATION_MINUTES}
+inventory:
+    default-low-stock-threshold: ${DEFAULT_LOW_STOCK_THRESHOLD}

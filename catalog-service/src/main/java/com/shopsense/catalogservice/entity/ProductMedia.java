@@ -24,7 +24,7 @@ public class ProductMedia {
     private Product product;
 
     @Column(nullable = false)
-    private String mediaId;
+    private UUID mediaId;
 
     @Builder.Default
     private Integer displayOrder = 0;

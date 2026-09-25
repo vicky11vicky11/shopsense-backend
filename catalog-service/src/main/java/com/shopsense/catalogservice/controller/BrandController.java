@@ -4,7 +4,7 @@ import com.shopsense.catalogservice.request.BrandRequest;
 import com.shopsense.catalogservice.response.BrandResponse;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.service.BrandService;
-import com.shopsense.catalogservice.utils.AppUrl;
+import com.shopsense.catalogservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

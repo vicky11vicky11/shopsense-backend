@@ -8,7 +8,7 @@ import com.shopsense.inventoryservice.response.AvailabilityResponse;
 import com.shopsense.inventoryservice.response.InventoryResponse;
 import com.shopsense.inventoryservice.response.StockMovementResponse;
 import com.shopsense.inventoryservice.service.InventoryService;
-import com.shopsense.inventoryservice.utils.AppUrl;
+import com.shopsense.inventoryservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

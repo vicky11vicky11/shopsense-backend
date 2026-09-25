@@ -4,7 +4,7 @@ import com.shopsense.catalogservice.request.ProductMediaRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.ProductMediaResponse;
 import com.shopsense.catalogservice.service.ProductMediaService;
-import com.shopsense.catalogservice.utils.AppUrl;
+import com.shopsense.catalogservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

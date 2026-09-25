@@ -2,26 +2,23 @@ package com.shopsense.userservice.entity;
 
 import com.shopsense.userservice.enums.UserRole;
 import com.shopsense.userservice.enums.UserStatus;
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
+import java.util.UUID;
 
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "users")
-public class User {
-
-    @Id
-    private String id;
+public class User extends BaseMongoEntity{
 
     private String firstName;
 
@@ -33,6 +30,7 @@ public class User {
     @Indexed(unique = true)
     private String phone;
 
+    @Indexed
     private UserRole role;
 
     private UserStatus status;
@@ -41,13 +39,7 @@ public class User {
 
     private boolean phoneVerified;
 
-    private String profileImageId;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
+    private UUID profileImageId;
 
     @Version
     private Long version;

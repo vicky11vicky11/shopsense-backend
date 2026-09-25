@@ -4,7 +4,7 @@ import com.shopsense.catalogservice.request.CategoryRequest;
 import com.shopsense.catalogservice.response.CategoryResponse;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.service.CategoryService;
-import com.shopsense.catalogservice.utils.AppUrl;
+import com.shopsense.catalogservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -36,22 +36,22 @@ public class CategoryController {
     }
 
     @GetMapping("/bulk")
-    public ResponseEntity<PageResponse<CategoryResponse>> getAllCategories( @PageableDefault(size = 10, page = 0, sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<CategoryResponse>> getAllCategories( @PageableDefault(sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
         return ResponseEntity.ok(categoryService.getAllCategories(pageable));
     }
 
     @GetMapping("/active")
-    public ResponseEntity<PageResponse<CategoryResponse>> getActiveCategories( @PageableDefault(size = 10, page = 0, sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<CategoryResponse>> getActiveCategories( @PageableDefault(sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
         return ResponseEntity.ok(categoryService.getActiveCategories(pageable));
     }
 
     @GetMapping("/root")
-    public ResponseEntity<PageResponse<CategoryResponse>> getRootCategories( @PageableDefault(size = 10, page = 0, sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<CategoryResponse>> getRootCategories( @PageableDefault(sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
         return ResponseEntity.ok(categoryService.getRootCategories(pageable));
     }
 
     @GetMapping("/{categoryId}/children")
-    public ResponseEntity<PageResponse<CategoryResponse>> getSubCategories( @PathVariable UUID categoryId, @PageableDefault(size = 10, page = 0, sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<CategoryResponse>> getSubCategories( @PathVariable UUID categoryId, @PageableDefault(sort = "categoryName", direction = Sort.Direction.ASC) Pageable pageable ) {
         return ResponseEntity.ok(categoryService.getSubCategories(categoryId, pageable));
     }
 

@@ -2,20 +2,19 @@ package com.shopsense.userservice.response;
 
 import com.shopsense.userservice.enums.UserRole;
 import com.shopsense.userservice.enums.UserStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
+@Getter
+@Setter
 @Builder
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
 
-    private String id;
+    private UUID id;
 
     private String firstName;
 
@@ -33,7 +32,7 @@ public class UserResponse {
 
     private boolean phoneVerified;
 
-    private String profileImageId;
+    private UUID profileImageId;
 
     private Instant createdAt;
     

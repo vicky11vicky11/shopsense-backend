@@ -23,15 +23,15 @@ public class Store {
     private UUID id;
 
     @Column(nullable = false)
-    private String sellerId;
+    private UUID sellerId;
 
     @Column(nullable = false)
-    private String addressId;
+    private UUID addressId;
 
     @Column(nullable = false)
     private String storeName;
 
-    private String storeImageId;
+    private UUID storeImageId;
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "TINYINT(1)")

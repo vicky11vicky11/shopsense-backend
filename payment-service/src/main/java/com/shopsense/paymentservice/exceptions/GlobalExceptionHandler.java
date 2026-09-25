@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.razorpay.RazorpayException;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
@@ -25,8 +28,11 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final Tracer tracer;
 
     @ExceptionHandler(RazorpayException.class)
     public ProblemDetail handleRazorpayException( RazorpayException e ) {
@@ -36,6 +42,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateKeyException.class)
     public ProblemDetail handleDuplicateKeyException( DuplicateKeyException ex ) {
         return buildProblemDetail(HttpStatus.CONFLICT, "Duplicate Resource", "A record with the same value already exists");
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ProblemDetail handleValidationException( ConstraintViolationException ex ) {
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Validation Failed", ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -149,6 +160,13 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
         problemDetail.setTitle(title);
         problemDetail.setProperty("timestamp", Instant.now());
+        Span currentSpan = tracer.currentSpan();
+        if ( currentSpan != null ) {
+            problemDetail.setProperty("traceId", currentSpan.context()
+                    .traceId());
+            problemDetail.setProperty("spanId", currentSpan.context()
+                    .spanId());
+        }
         return problemDetail;
     }
 }

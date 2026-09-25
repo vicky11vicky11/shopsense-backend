@@ -20,7 +20,7 @@ public class CategoryRequest {
     @Size(max = 1000)
     private String categoryDescription;
 
-    private String categoryImageId;
+    private UUID categoryImageId;
 
     private UUID parentCategoryId;
 }

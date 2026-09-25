@@ -1,27 +1,24 @@
 package com.shopsense.userservice.entity;
 
-import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Instant;
+import java.util.UUID;
 
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "addresses")
-public class Address {
-
-    @Id
-    private String id;
+public class Address extends BaseMongoEntity {
 
     @Indexed
-    private String userId;
+    private UUID userId;
 
     private String addressName;
 
@@ -43,9 +40,4 @@ public class Address {
 
     private boolean defaultAddress;
 
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 }

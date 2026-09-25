@@ -5,7 +5,7 @@ import com.shopsense.catalogservice.request.UpdateStoreRequest;
 import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.StoreResponse;
 import com.shopsense.catalogservice.service.StoreService;
-import com.shopsense.catalogservice.utils.AppUrl;
+import com.shopsense.catalogservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +37,7 @@ public class StoreController {
     }
 
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<PageResponse<StoreResponse>> getStoresBySellerId( @PathVariable String sellerId, @PageableDefault(size = 10, page = 0, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<StoreResponse>> getStoresBySellerId( @PathVariable UUID sellerId, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
         return ResponseEntity.ok(storeService.getStoresBySellerId(sellerId, pageable));
     }
 

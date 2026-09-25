@@ -3,8 +3,8 @@ package com.shopsense.catalogservice.service.impl;
 import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Category;
 import com.shopsense.catalogservice.enums.MediaType;
-import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
-import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
+import com.shopsense.catalogservice.exception.ResourceAlreadyExistsException;
+import com.shopsense.catalogservice.exception.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.CategoryMapper;
 import com.shopsense.catalogservice.repository.CategoryRepository;
 import com.shopsense.catalogservice.request.CategoryRequest;
@@ -151,16 +151,16 @@ public class CategoryServiceImpl implements CategoryService {
 
     private Category findCategoryById( UUID categoryId ) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
     }
 
-    private void validateCategoryImage( String categoryImageId ) {
+    private void validateCategoryImage( UUID categoryImageId ) {
         if ( categoryImageId == null ) {
             return;
         }
         boolean imageExist = mediaServiceClient.imageExist(categoryImageId, MediaType.CATEGORY);
         if ( !imageExist ) {
-            throw new ResourceNotFoundException("Category image not found with id: " + categoryImageId);
+            throw new ResourceNotFoundException("Category image not found");
         }
     }
 }

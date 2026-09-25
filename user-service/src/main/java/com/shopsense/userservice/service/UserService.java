@@ -6,6 +6,8 @@ import com.shopsense.userservice.response.PageResponse;
 import com.shopsense.userservice.response.UserResponse;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface UserService {
 
     UserResponse createCustomer( UserRequest userRequest);
@@ -16,18 +18,18 @@ public interface UserService {
 
     PageResponse<UserResponse> getAllUsersByRole( UserRole role, Pageable pageable );
 
-    UserResponse getCustomer( String customerId );
+    UserResponse getCustomer( UUID customerId );
 
-    UserResponse getSeller( String sellerId );
+    UserResponse getSeller( UUID sellerId );
 
-    UserResponse getAdmin( String adminId );
+    UserResponse getAdmin( UUID adminId );
 
-    boolean isCustomerExists( String customerId );
+    boolean isCustomerExists( UUID customerId );
 
-    boolean isSellerExists( String sellerId );
+    boolean isSellerExists( UUID sellerId );
 
-    UserResponse updateUser( String userId, UserRequest userRequest );
+    UserResponse updateUser( UUID userId, UserRequest userRequest );
 
-    void deleteUser( String userId );
+    void deleteUser( UUID userId );
 
 }

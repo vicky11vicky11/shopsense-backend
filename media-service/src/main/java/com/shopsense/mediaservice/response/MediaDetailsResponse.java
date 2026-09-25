@@ -3,6 +3,8 @@ package com.shopsense.mediaservice.response;
 import com.shopsense.mediaservice.enums.MediaType;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @Builder
@@ -10,7 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 public class MediaDetailsResponse {
 
-    private String id;
+    private UUID id;
 
     private String url;
 

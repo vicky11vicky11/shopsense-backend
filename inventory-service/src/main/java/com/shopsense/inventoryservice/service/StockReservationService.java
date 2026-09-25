@@ -18,4 +18,8 @@ public interface StockReservationService {
     StockReservationResponse getByOrderId(UUID orderId);
 
     void expireReservations();
+
+    void releaseByOrder( UUID orderId );
+
+    void consumeByOrder( UUID orderId );
 }

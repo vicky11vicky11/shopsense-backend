@@ -4,8 +4,9 @@ import com.shopsense.userservice.request.AddressRequest;
 import com.shopsense.userservice.response.AddressResponse;
 import com.shopsense.userservice.response.PageResponse;
 import com.shopsense.userservice.service.AddressService;
-import com.shopsense.userservice.utils.AppUrl;
+import com.shopsense.userservice.util.AppUrl;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping(AppUrl.ADDRESS_URL)
@@ -29,31 +32,31 @@ public class AddressController {
     }
 
     @GetMapping("/bulk/{userId}")
-    public ResponseEntity<PageResponse<AddressResponse>> getAllAddresses( @PathVariable String userId, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
+    public ResponseEntity<PageResponse<AddressResponse>> getAllAddresses( @PathVariable UUID userId, @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable ) {
         PageResponse<AddressResponse> addressResponses = addressService.getAllAddresses(userId, pageable);
         return ResponseEntity.ok(addressResponses);
     }
 
     @GetMapping("/{addressId}/user/{userId}")
-    public ResponseEntity<AddressResponse> getAddressById( @PathVariable String addressId, @PathVariable String userId ) {
+    public ResponseEntity<AddressResponse> getAddressById( @PathVariable UUID addressId, @PathVariable UUID userId ) {
         AddressResponse addressResponse = addressService.getAddressById(addressId, userId);
         return ResponseEntity.ok(addressResponse);
     }
 
-    @GetMapping("/exists/{addressId}")
-    public ResponseEntity<Boolean> getAddressExists( @PathVariable String addressId ) {
-        boolean addressExists = addressService.isAddressExists(addressId);
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> getAddressExistsForUser( @RequestParam UUID addressId, @RequestParam(required = false) UUID userId ) {
+        boolean addressExists = addressService.isAddressExists(addressId,userId);
         return ResponseEntity.ok(addressExists);
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<AddressResponse> updateAddress( @PathVariable String addressId, @Valid @RequestBody AddressRequest addressRequest ) {
+    public ResponseEntity<AddressResponse> updateAddress( @PathVariable UUID addressId, @Valid @RequestBody AddressRequest addressRequest ) {
         AddressResponse addressResponse = addressService.updateAddress(addressId, addressRequest);
         return ResponseEntity.ok(addressResponse);
     }
 
     @DeleteMapping("/{addressId}/user/{userId}")
-    public ResponseEntity<Void> deleteAddress( @PathVariable String addressId, @PathVariable String userId ) {
+    public ResponseEntity<Void> deleteAddress( @PathVariable UUID addressId, @PathVariable UUID userId ) {
         addressService.deleteAddress(addressId, userId);
         return ResponseEntity.noContent()
                 .build();

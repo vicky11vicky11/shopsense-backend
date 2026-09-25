@@ -8,15 +8,19 @@ import com.shopsense.mediaservice.request.MediaUpdateRequest;
 import com.shopsense.mediaservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.response.MediaResponse;
 import com.shopsense.mediaservice.service.MediaService;
-import com.shopsense.mediaservice.utils.AppUrl;
+import com.shopsense.mediaservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(AppUrl.MEDIA_URL)
@@ -38,30 +42,39 @@ public class MediaController {
                 .body(responseList);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<MediaDetailsResponse> getImage( @PathVariable String id ) {
-        return ResponseEntity.ok(mediaService.getImage(id));
+    @GetMapping("/bulk")
+    public ResponseEntity<Map<MediaType,List<MediaDetailsResponse>>> getAllImages(){
+        Map<MediaType,List<MediaDetailsResponse>> responseList = mediaService.getAllImages();
+        return ResponseEntity.ok(responseList);
+    }
+
+    @GetMapping("/{mediaId}")
+    public ResponseEntity<MediaDetailsResponse> getImage( @PathVariable  UUID mediaId ) {
+        MediaDetailsResponse response = mediaService.getImage(mediaId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/bulk")
     public ResponseEntity<List<MediaDetailsResponse>> getImages( @Valid @RequestBody BulkMediaRequest request ) {
-        return ResponseEntity.ok(mediaService.getImages(request.getIds()));
+        List<MediaDetailsResponse> responseList = mediaService.getImages(request.getIds());
+        return ResponseEntity.ok(responseList);
     }
 
-    @GetMapping("/exist/{id}")
-    public ResponseEntity<Boolean> imageExist( @PathVariable String id, @RequestParam MediaType mediaType ) {
-        boolean exist = mediaService.isImageExist(id, mediaType);
+    @GetMapping("/exist/{mediaId}")
+    public ResponseEntity<Boolean> imageExist( @PathVariable  UUID mediaId, @RequestParam MediaType mediaType ) {
+        boolean exist = mediaService.isImageExist(mediaId, mediaType);
         return ResponseEntity.ok(exist);
     }
 
-    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
-    public ResponseEntity<MediaResponse> updateImage( @PathVariable String id, @Valid @ModelAttribute MediaUpdateRequest mediaRequest ) {
-        return ResponseEntity.ok(mediaService.updateImage(id, mediaRequest));
+    @PutMapping(value = "/{mediaId}", consumes = "multipart/form-data")
+    public ResponseEntity<MediaResponse> updateImage( @PathVariable  UUID mediaId, @Valid @ModelAttribute MediaUpdateRequest mediaRequest ) {
+        MediaResponse mediaResponse = mediaService.updateImage(mediaId, mediaRequest);
+        return ResponseEntity.ok(mediaResponse);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteImage( @PathVariable String id ) {
-        mediaService.deleteImage(id);
+    @DeleteMapping("/{mediaId}")
+    public ResponseEntity<Void> deleteImage( @PathVariable  UUID mediaId ) {
+        mediaService.deleteImage(mediaId);
         return ResponseEntity.noContent()
                 .build();
     }

@@ -14,7 +14,7 @@ public interface StoreService {
 
     StoreResponse getStoreById( UUID storeId );
 
-    PageResponse<StoreResponse> getStoresBySellerId( String sellerId, Pageable pageable );
+    PageResponse<StoreResponse> getStoresBySellerId( UUID sellerId, Pageable pageable );
 
     StoreResponse updateStore( UUID storeId, UpdateStoreRequest request );
 

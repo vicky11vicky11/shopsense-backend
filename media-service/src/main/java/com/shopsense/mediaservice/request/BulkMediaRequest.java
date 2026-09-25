@@ -1,20 +1,22 @@
 package com.shopsense.mediaservice.request;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class BulkMediaRequest {
 
     @NotEmpty(message = "Media IDs are required")
-    @Size(max = 1000, message = "Maximum 1000 media IDs are allowed")
-    private List<String> ids;
+    @Size(max = 10, message = "Maximum 10 media IDs are allowed")
+    private List<UUID> ids;
 
 }

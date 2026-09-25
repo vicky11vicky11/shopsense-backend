@@ -3,13 +3,18 @@ package com.shopsense.userservice.controller;
 import com.shopsense.userservice.request.UserRequest;
 import com.shopsense.userservice.response.UserResponse;
 import com.shopsense.userservice.service.UserService;
-import com.shopsense.userservice.utils.AppUrl;
+import com.shopsense.userservice.util.AppUrl;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(AppUrl.SELLER_URL)
@@ -24,27 +29,27 @@ public class SellerController {
                 .body(userResponse);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getSeller( @PathVariable String id ) {
-        UserResponse userResponse = userService.getSeller(id);
+    @GetMapping("/{sellerId}")
+    public ResponseEntity<UserResponse> getSeller( @PathVariable UUID sellerId ) {
+        UserResponse userResponse = userService.getSeller(sellerId);
         return ResponseEntity.ok(userResponse);
     }
 
     @GetMapping("/exists/{sellerId}")
-    public ResponseEntity<Boolean> getCustomerExists( @PathVariable String sellerId ) {
+    public ResponseEntity<Boolean> getCustomerExists( @PathVariable UUID sellerId ) {
         boolean customerExists = userService.isSellerExists(sellerId);
         return ResponseEntity.ok(customerExists);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateSeller( @PathVariable String id, @Valid @RequestBody UserRequest userRequest ) {
-        UserResponse userResponse = userService.updateUser(id, userRequest);
+    @PutMapping("/{sellerId}")
+    public ResponseEntity<UserResponse> updateSeller( @PathVariable UUID sellerId, @Valid @RequestBody UserRequest userRequest ) {
+        UserResponse userResponse = userService.updateUser(sellerId, userRequest);
         return ResponseEntity.ok(userResponse);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSeller( @PathVariable String id ) {
-        userService.deleteUser(id);
+    @DeleteMapping("/{sellerId}")
+    public ResponseEntity<Void> deleteSeller( @PathVariable UUID sellerId ) {
+        userService.deleteUser(sellerId);
         return ResponseEntity.noContent()
                 .build();
     }

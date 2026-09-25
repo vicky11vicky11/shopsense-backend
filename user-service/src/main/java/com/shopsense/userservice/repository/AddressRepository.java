@@ -8,13 +8,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface AddressRepository extends MongoRepository<Address, String> {
+public interface AddressRepository extends MongoRepository<Address, UUID> {
 
-    Page<Address> findAllByUserId( String userId, Pageable pageable );
+    Page<Address> findAllByUserId( UUID userId, Pageable pageable );
 
-    Optional<Address> findByUserIdAndDefaultAddressTrue( String userId);
+    Optional<Address> findByUserIdAndDefaultAddressTrue( UUID userId);
 
-    Optional<Address> findByIdAndUserId( String id, String userId );
+    Optional<Address> findByIdAndUserId( UUID id, UUID userId );
+
+    boolean existsByIdAndUserId( UUID id, UUID userId );
 }

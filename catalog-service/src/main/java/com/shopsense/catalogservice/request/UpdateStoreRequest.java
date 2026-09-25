@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @Builder
@@ -16,6 +18,6 @@ public class UpdateStoreRequest {
     @Size(max = 200)
     private String storeName;
 
-    private String storeImageId;
+    private UUID storeImageId;
 
 }

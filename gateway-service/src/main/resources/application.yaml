@@ -58,7 +58,7 @@ management:
         tracing:
             export:
                 otlp:
-                    endpoint: http://localhost:4318/v1/traces
+                    endpoint: ${TEMPO_URL}
     prometheus:
         metrics:
             export:

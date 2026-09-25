@@ -18,7 +18,7 @@ public class CategoryResponse {
 
     private String categoryDescription;
 
-    private String categoryImageId;
+    private UUID categoryImageId;
 
     private UUID parentCategoryId;
 

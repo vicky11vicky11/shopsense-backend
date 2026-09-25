@@ -5,8 +5,8 @@ import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.client.SellerServiceClient;
 import com.shopsense.catalogservice.entity.Store;
 import com.shopsense.catalogservice.enums.MediaType;
-import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
-import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
+import com.shopsense.catalogservice.exception.ResourceAlreadyExistsException;
+import com.shopsense.catalogservice.exception.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.StoreMapper;
 import com.shopsense.catalogservice.repository.StoreRepository;
 import com.shopsense.catalogservice.request.StoreRequest;
@@ -48,8 +48,8 @@ public class StoreServiceImpl implements StoreService {
         }
         Store store = storeMapper.toEntity(request);
         validateStoreImage(store.getStoreImageId());
-        validateAddress(store.getAddressId());
         validateSellerId(store.getSellerId());
+        validateAddress(store.getAddressId(),store.getSellerId());
         store.setActive(true);
         Store savedStore = storeRepository.saveAndFlush(store);
         log.info("Store created successfully with id: {}", savedStore.getId());
@@ -66,7 +66,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<StoreResponse> getStoresBySellerId( String sellerId, Pageable pageable ) {
+    public PageResponse<StoreResponse> getStoresBySellerId( UUID sellerId, Pageable pageable ) {
         Page<Store> stores = storeRepository.findBySellerId(sellerId, pageable);
         log.info("Stores found successfully with seller id: {}", sellerId);
         return PageResponse.from(stores, storeMapper::toResponse);
@@ -121,7 +121,7 @@ public class StoreServiceImpl implements StoreService {
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + storeId));
     }
 
-    private void validateStoreImage( String storeImageId ) {
+    private void validateStoreImage( UUID storeImageId ) {
         if ( storeImageId == null ) {
             return;
         }
@@ -131,14 +131,14 @@ public class StoreServiceImpl implements StoreService {
         }
     }
 
-    private void validateAddress(String addressId) {
-        boolean addressExists = addressServiceClient.isAddressExists(addressId);
+    private void validateAddress( UUID addressId, UUID sellerId ) {
+        boolean addressExists = addressServiceClient.isAddressExists(addressId, sellerId);
         if ( !addressExists ) {
             throw new ResourceNotFoundException("Address not found with id: " + addressId);
         }
     }
 
-    private void validateSellerId(String sellerId) {
+    private void validateSellerId( UUID sellerId ) {
         boolean sellerExists = sellerServiceClient.isSellerExists(sellerId);
         if ( !sellerExists ) {
             throw new ResourceNotFoundException("Seller not found with id: " + sellerId);

@@ -18,7 +18,7 @@ public class BrandResponse {
 
     private String brandDescription;
 
-    private String brandImageId;
+    private UUID brandImageId;
 
     private boolean active;
 

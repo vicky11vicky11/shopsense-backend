@@ -1,21 +1,20 @@
 package com.shopsense.userservice.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
+@Getter
+@Setter
 @Builder
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class AddressResponse {
 
-    private String id;
+    private UUID id;
 
-    private String userId;
+    private UUID userId;
 
     private String addressName;
 

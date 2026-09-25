@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,5 +20,5 @@ public class BrandRequest {
     @Size(max = 1000)
     private String brandDescription;
 
-    private String brandImageId;
+    private UUID brandImageId;
 }

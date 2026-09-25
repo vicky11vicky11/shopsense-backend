@@ -4,8 +4,8 @@ import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Product;
 import com.shopsense.catalogservice.entity.ProductMedia;
 import com.shopsense.catalogservice.enums.MediaType;
-import com.shopsense.catalogservice.exceptions.ResourceAlreadyExistsException;
-import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
+import com.shopsense.catalogservice.exception.ResourceAlreadyExistsException;
+import com.shopsense.catalogservice.exception.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.ProductMediaMapper;
 import com.shopsense.catalogservice.repository.ProductMediaRepository;
 import com.shopsense.catalogservice.repository.ProductRepository;
@@ -68,7 +68,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         }
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
-        List<String> mediaIds = requests.stream()
+        List<UUID> mediaIds = requests.stream()
                 .map(ProductMediaRequest::getMediaId)
                 .toList();
         if ( mediaIds.size() != mediaIds.stream()
@@ -79,7 +79,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         mediaIds.forEach(this::validateProductImage);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductIdAndMediaIdIn(productId, new HashSet<>(mediaIds));
         if ( !existingMedia.isEmpty() ) {
-            String existingMediaId = existingMedia.getFirst()
+            UUID existingMediaId = existingMedia.getFirst()
                     .getMediaId();
             throw new ResourceAlreadyExistsException("Media already exists for this product: " + existingMediaId);
         }
@@ -222,7 +222,7 @@ public class ProductMediaServiceImpl implements ProductMediaService {
         productMedia.setDisplayOrder(newOrder);
     }
 
-    private void validateProductImage( String productImageId ) {
+    private void validateProductImage( UUID productImageId ) {
         boolean imageExist = mediaServiceClient.imageExist(productImageId, MediaType.PRODUCT);
         if ( !imageExist ) {
             throw new ResourceNotFoundException("Product image not found: " + productImageId);

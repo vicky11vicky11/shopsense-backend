@@ -15,7 +15,7 @@ public class ProductMediaResponse {
 
     private UUID productId;
 
-    private String mediaId;
+    private UUID mediaId;
 
     private Integer displayOrder;
 

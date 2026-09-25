@@ -1,6 +1,6 @@
 package com.shopsense.inventoryservice.client;
 
-import com.shopsense.inventoryservice.utils.AppUrl;
+import com.shopsense.inventoryservice.util.AppUrl;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;

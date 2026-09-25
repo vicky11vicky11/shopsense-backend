@@ -15,11 +15,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "brands", uniqueConstraints = { @UniqueConstraint(name = "uk_brand_name", columnNames = "name") })
+@Table(name = "brands", uniqueConstraints = { @UniqueConstraint(name = "uk_brand_name", columnNames = "brand_name") })
 public class Brand {
 
     @Id
-    @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
+    @UuidGenerator(style = UuidGenerator.Style.VERSION_7 )
     private UUID id;
 
     @Column(nullable = false)
@@ -27,7 +27,7 @@ public class Brand {
 
     private String brandDescription;
 
-    private String brandImageId;
+    private UUID brandImageId;
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")

@@ -3,13 +3,8 @@ package com.shopsense.mediaservice.entity;
 
 import com.shopsense.mediaservice.enums.MediaType;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.Instant;
 
 @Builder
 @Getter
@@ -17,10 +12,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "media")
-public class Media {
-
-    @Id
-    private String id;
+public class Media extends BaseMongoEntity {
 
     @Indexed(unique = true)
     private String publicId;
@@ -38,11 +30,5 @@ public class Media {
     private Long bytes;
 
     private MediaType mediaType;
-
-    @CreatedDate
-    private Instant createdAt;
-
-    @LastModifiedDate
-    private Instant updatedAt;
 
 }

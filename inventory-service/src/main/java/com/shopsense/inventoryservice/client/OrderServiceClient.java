@@ -9,5 +9,5 @@ import java.util.UUID;
 public interface OrderServiceClient {
 
     @GetExchange("/exists/{orderId}")
-    boolean idOrderExists( UUID orderId );
+    boolean isOrderExists( UUID orderId );
 }

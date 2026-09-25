@@ -3,9 +3,9 @@ package com.shopsense.userservice.service.impl;
 import com.shopsense.userservice.entity.Address;
 import com.shopsense.userservice.entity.User;
 import com.shopsense.userservice.enums.UserStatus;
-import com.shopsense.userservice.exceptions.ResourceNotFoundException;
-import com.shopsense.userservice.exceptions.UserAccountBlockedException;
-import com.shopsense.userservice.exceptions.UserAccountSuspendedException;
+import com.shopsense.userservice.exception.ResourceNotFoundException;
+import com.shopsense.userservice.exception.UserAccountBlockedException;
+import com.shopsense.userservice.exception.UserAccountSuspendedException;
 import com.shopsense.userservice.mapper.AddressMapper;
 import com.shopsense.userservice.repository.AddressRepository;
 import com.shopsense.userservice.repository.UserRepository;
@@ -19,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -53,7 +55,7 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AddressResponse> getAllAddresses( String userId, Pageable pageable ) {
+    public PageResponse<AddressResponse> getAllAddresses( UUID userId, Pageable pageable ) {
         Page<Address> addressList = addressRepository.findAllByUserId(userId, pageable);
         log.info("Fetched All Addresses for user {} with Size {}, Page {} and Sort {}.", userId, pageable.getPageSize(), pageable.getPageNumber(), pageable.getSort());
         return PageResponse.from(addressList, addressMapper::toResponse);
@@ -61,7 +63,7 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional(readOnly = true)
-    public AddressResponse getAddressById( String addressId, String userId ) {
+    public AddressResponse getAddressById( UUID addressId, UUID userId ) {
         Address address = addressRepository.findByIdAndUserId(addressId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
         log.info("Fetched address by id {}", address.getId());
@@ -69,19 +71,19 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public boolean isAddressExists( String addressId ) {
-        boolean exists = addressRepository.existsById(addressId);
-        log.info("Address {} exists {}", addressId, exists);
+    public boolean isAddressExists( UUID addressId, UUID userId ) {
+        boolean exists = userId == null ? addressRepository.existsById(addressId) : addressRepository.existsByIdAndUserId(addressId, userId);
+        log.info("Address with id {} exists {}", addressId, exists);
         return exists;
     }
 
     @Override
     @Transactional
-    public AddressResponse updateAddress( String addressId, AddressRequest addressRequest ) {
+    public AddressResponse updateAddress( UUID addressId, AddressRequest addressRequest ) {
         Address address = addressRepository.findByIdAndUserId(addressId, addressRequest.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
         User user = userRepository.findById(addressRequest.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with Id: " + addressRequest.getUserId()));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         validateUser(user);
         if ( !address.isDefaultAddress() && addressRequest.isDefaultAddress() ) {
             addressRepository.findByUserIdAndDefaultAddressTrue(addressRequest.getUserId())
@@ -98,19 +100,19 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
-    public void deleteAddress( String addressId, String userId ) {
+    public void deleteAddress( UUID addressId, UUID userId ) {
         Address address = addressRepository.findByIdAndUserId(addressId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with Id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         validateUser(user);
         addressRepository.delete(address);
-        log.info("Address deleted with id {}", address.getId());
+        log.info("Address deleted for id {}", address.getId());
     }
 
     private void validateUser( User user ) {
         if ( user.getStatus() == UserStatus.DELETED ) {
-            throw new ResourceNotFoundException("User not found with Id: " + user.getId());
+            throw new ResourceNotFoundException("User not found.");
         }
         if ( user.getStatus() == UserStatus.BLOCKED ) {
             throw new UserAccountBlockedException("Your account is blocked. You cannot perform this action until your account is unblocked.");

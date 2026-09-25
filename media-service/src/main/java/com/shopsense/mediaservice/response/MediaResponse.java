@@ -1,16 +1,16 @@
 package com.shopsense.mediaservice.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+import java.util.UUID;
+
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class MediaResponse {
 
-    private String id;
+    private UUID id;
 
 }

@@ -12,9 +12,9 @@ import java.util.UUID;
 @Repository
 public interface StoreRepository extends JpaRepository<Store, UUID> {
 
-    boolean existsBySellerIdAndAddressId( String sellerId, String addressId );
+    boolean existsBySellerIdAndAddressId( UUID sellerId, UUID addressId );
 
-    Page<Store> findBySellerId( String sellerId, Pageable pageable );
+    Page<Store> findBySellerId( UUID sellerId, Pageable pageable );
 
     Optional<Store> findByIdAndActive( UUID id, Boolean active );
 }

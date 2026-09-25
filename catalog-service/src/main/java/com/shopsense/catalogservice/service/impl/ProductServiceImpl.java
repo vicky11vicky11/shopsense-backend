@@ -4,7 +4,7 @@ import com.shopsense.catalogservice.entity.Brand;
 import com.shopsense.catalogservice.entity.Category;
 import com.shopsense.catalogservice.entity.Product;
 import com.shopsense.catalogservice.entity.Store;
-import com.shopsense.catalogservice.exceptions.ResourceNotFoundException;
+import com.shopsense.catalogservice.exception.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.ProductInformationMapper;
 import com.shopsense.catalogservice.mapper.ProductMapper;
 import com.shopsense.catalogservice.mapper.ProductMediaMapper;
@@ -121,7 +121,7 @@ public class ProductServiceImpl implements ProductService {
         Brand brand = null;
         if ( request.getBrandId() != null ) {
             brand = brandRepository.findByIdAndActive(request.getBrandId(), true)
-                    .orElseThrow(() -> new ResourceNotFoundException("Active brand not found with id: " + request.getBrandId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Active brand not found"));
         }
         productMapper.updateEntity(request, product);
         product.setStore(store);
@@ -173,7 +173,7 @@ public class ProductServiceImpl implements ProductService {
 
     private Product findProductById( UUID productId ) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
     }
 
     private Product findProductByIdAndStatus( UUID productId, boolean status ) {
@@ -183,16 +183,16 @@ public class ProductServiceImpl implements ProductService {
 
     private Store findActiveStoreById( UUID storeId ) {
         return storeRepository.findByIdAndActive(storeId, true)
-                .orElseThrow(() -> new ResourceNotFoundException("Active store not found with id: " + storeId));
+                .orElseThrow(() -> new ResourceNotFoundException("Active store not found"));
     }
 
     private Category findActiveCategoryById( UUID categoryId ) {
         return categoryRepository.findByIdAndActive(categoryId, true)
-                .orElseThrow(() -> new ResourceNotFoundException("Active category not found with id: " + categoryId));
+                .orElseThrow(() -> new ResourceNotFoundException("Active category not found"));
     }
 
     private Brand findActiveBrandById( UUID brandId ) {
         return brandRepository.findByIdAndActive(brandId, true)
-                .orElseThrow(() -> new ResourceNotFoundException("Active brand not found with id: " + brandId));
+                .orElseThrow(() -> new ResourceNotFoundException("Active brand not found"));
     }
 }

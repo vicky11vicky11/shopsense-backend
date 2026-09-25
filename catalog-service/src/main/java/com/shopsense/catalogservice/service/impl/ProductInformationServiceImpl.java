@@ -39,7 +39,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     @Transactional
     public ProductInformationResponse create( UUID productId, ProductInformationRequest request ) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
         if ( productInformationRepository.existsByProductIdAndAttributeName(productId, request.getAttributeName()) ) {
             throw new IllegalArgumentException("Attribute already exists for this product");
         }
@@ -54,7 +54,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     @Transactional
     public List<ProductInformationResponse> bulkCreate( UUID productId, List<ProductInformationRequest> requests ) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found: " + productId));
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
         if ( requests == null || requests.isEmpty() ) {
             throw new IllegalArgumentException("Product information list cannot be empty");
         }
@@ -87,7 +87,7 @@ public class ProductInformationServiceImpl implements ProductInformationService 
     @Transactional(readOnly = true)
     public PageResponse<ProductInformationResponse> getByProductId( UUID productId, Pageable pageable ) {
         if ( !productRepository.existsById(productId) ) {
-            throw new EntityNotFoundException("Product not found: " + productId);
+            throw new EntityNotFoundException("Product not found");
         }
         Page<ProductInformation> productInformations = productInformationRepository.findByProductIdOrderByAttributeNameAsc(productId, pageable);
         log.info("Product informations found successfully");
@@ -126,6 +126,6 @@ public class ProductInformationServiceImpl implements ProductInformationService 
 
     private ProductInformation getProductInformation( UUID productId, UUID productInformationId ) {
         return productInformationRepository.findByIdAndProductId(productInformationId, productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product information not found: " + productInformationId));
+                .orElseThrow(() -> new EntityNotFoundException("Product information not found"));
     }
 }

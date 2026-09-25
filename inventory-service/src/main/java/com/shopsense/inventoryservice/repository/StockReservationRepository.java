@@ -26,4 +26,6 @@ public interface StockReservationRepository extends JpaRepository<StockReservati
                   AND r.expiresAt <= :now
             """)
     List<StockReservation> findExpiredReservations( Instant now );
+
+    List<StockReservation> findAllByOrderId( UUID orderId );
 }

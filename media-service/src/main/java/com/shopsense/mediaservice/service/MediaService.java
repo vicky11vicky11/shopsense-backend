@@ -8,6 +8,8 @@ import com.shopsense.mediaservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.response.MediaResponse;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public interface MediaService {
 
@@ -15,14 +17,16 @@ public interface MediaService {
 
     List<MediaResponse> uploadImages( BulkMediaUploadRequest mediaRequest );
 
-    MediaDetailsResponse getImage( String id );
+    Map<MediaType,List<MediaDetailsResponse>> getAllImages();
 
-    List<MediaDetailsResponse> getImages( List<String> ids );
+    MediaDetailsResponse getImage( UUID id );
 
-    boolean isImageExist( String id, MediaType mediaType );
+    List<MediaDetailsResponse> getImages( List<UUID> ids );
 
-    MediaResponse updateImage( String id, MediaUpdateRequest mediaUpdateRequest );
+    boolean isImageExist( UUID id, MediaType mediaType );
 
-    void deleteImage( String id );
+    MediaResponse updateImage( UUID id, MediaUpdateRequest mediaUpdateRequest );
+
+    void deleteImage( UUID id );
 
 }
