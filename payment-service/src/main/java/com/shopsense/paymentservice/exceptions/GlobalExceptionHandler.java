@@ -44,11 +44,6 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.CONFLICT, "Duplicate Resource", "A record with the same value already exists");
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ProblemDetail handleValidationException( ConstraintViolationException ex ) {
-        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Validation Failed", ex.getMessage());
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolationException( DataIntegrityViolationException ex ) {
         return buildProblemDetail(HttpStatus.CONFLICT, "Data Integrity Violation", "The operation violates a database constraint");

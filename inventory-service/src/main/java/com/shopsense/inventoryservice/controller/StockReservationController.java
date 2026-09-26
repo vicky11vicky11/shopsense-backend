@@ -65,4 +65,10 @@ public class StockReservationController {
         return ResponseEntity.noContent()
                 .build();
     }
+
+    @PostMapping("/order/{orderId}/restore")
+    public ResponseEntity<Void> restoreConsumedByOrder( @PathVariable UUID orderId ) {
+        reservationService.restoreConsumedByOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
 }

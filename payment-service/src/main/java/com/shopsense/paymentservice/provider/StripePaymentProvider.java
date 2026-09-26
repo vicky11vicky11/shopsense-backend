@@ -3,6 +3,7 @@ package com.shopsense.paymentservice.provider;
 import com.shopsense.paymentservice.config.StripeProperties;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
+import com.shopsense.paymentservice.enums.RefundStatus;
 import com.shopsense.paymentservice.exceptions.GatewayException;
 import com.shopsense.paymentservice.exceptions.WebhookVerificationException;
 import com.shopsense.paymentservice.request.CreateGatewayPaymentRequest;
@@ -100,6 +101,22 @@ public class StripePaymentProvider implements PaymentProvider {
             EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
             Object stripeObject = deserializer.getObject()
                     .orElse(null);
+            if ( stripeObject instanceof Refund stripeRefund ) {
+                RefundStatus refundStatus = switch (stripeRefund.getStatus() == null ? "" : stripeRefund.getStatus().toLowerCase()) {
+                    case "succeeded" -> RefundStatus.REFUNDED;
+                    case "failed", "canceled" -> RefundStatus.FAILED;
+                    default -> RefundStatus.PENDING;
+                };
+                return PaymentWebhookEvent.builder()
+                        .eventId(actualEventId)
+                        .gateway(PaymentGateway.STRIPE)
+                        .eventType(eventType)
+                        .gatewayRefundId(stripeRefund.getId())
+                        .gatewayPaymentId(stripeRefund.getPaymentIntent())
+                        .refundStatus(refundStatus)
+                        .failureReason(stripeRefund.getFailureReason())
+                        .build();
+            }
             if ( !( stripeObject instanceof PaymentIntent ) ) {
                 return PaymentWebhookEvent.builder()
                         .eventId(actualEventId)

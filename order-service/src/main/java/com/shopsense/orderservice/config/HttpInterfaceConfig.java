@@ -26,11 +26,6 @@ public class HttpInterfaceConfig {
     }
 
     @Bean
-    public CustomerServiceClient customerServiceClient( WebClient.Builder webClientBuilder ) {
-        return createClient(webClientBuilder, "http://user-service", CustomerServiceClient.class);
-    }
-
-    @Bean
     public MediaServiceClient mediaServiceClient( WebClient.Builder webClientBuilder ) {
         return createClient(webClientBuilder, "http://media-service", MediaServiceClient.class);
     }
@@ -43,6 +38,11 @@ public class HttpInterfaceConfig {
     @Bean
     public StockReservationServiceClient stockReservationServiceClient( WebClient.Builder webClientBuilder ) {
         return createClient(webClientBuilder, "http://inventory-service", StockReservationServiceClient.class);
+    }
+
+    @Bean
+    public PaymentServiceClient paymentServiceClient( WebClient.Builder webClientBuilder ) {
+        return createClient(webClientBuilder, "http://payment-service", PaymentServiceClient.class);
     }
 
     private <T> T createClient( WebClient.Builder builder, String baseUrl, Class<T> clientType ) {

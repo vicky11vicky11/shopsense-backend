@@ -1,5 +1,6 @@
 package com.shopsense.orderservice.response;
 
+import com.shopsense.orderservice.enums.Currency;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -26,5 +27,5 @@ public class OrderItemResponse {
 
     private BigDecimal lineTotal;
 
-    private String currency;
+    private Currency currency;
 }

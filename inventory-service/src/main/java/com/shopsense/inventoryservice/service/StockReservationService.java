@@ -22,4 +22,6 @@ public interface StockReservationService {
     void releaseByOrder( UUID orderId );
 
     void consumeByOrder( UUID orderId );
+
+    void restoreConsumedByOrder( UUID orderId );
 }

@@ -4,12 +4,13 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Builder
 public class CartResponse {
 
-    private String userId;
+    private UUID userId;
 
     private List<CartItemResponse> items;
 

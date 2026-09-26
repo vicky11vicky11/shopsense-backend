@@ -1,5 +1,6 @@
 package com.shopsense.orderservice.response;
 
+import com.shopsense.orderservice.enums.Currency;
 import com.shopsense.orderservice.enums.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +18,7 @@ public class OrderResponse {
 
     private String orderNumber;
 
-    private String userId;
+    private UUID userId;
 
     private OrderStatus status;
 
@@ -31,9 +32,9 @@ public class OrderResponse {
 
     private BigDecimal totalAmount;
 
-    private String currency;
+    private Currency currency;
 
-    private String shippingAddressId;
+    private UUID shippingAddressId;
 
     private List<OrderItemResponse> items;
 

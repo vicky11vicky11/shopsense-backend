@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CartItem {
 
     private UUID productId;

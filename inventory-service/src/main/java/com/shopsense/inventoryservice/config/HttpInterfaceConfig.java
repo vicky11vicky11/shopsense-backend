@@ -1,5 +1,6 @@
 package com.shopsense.inventoryservice.config;
 
+import com.shopsense.inventoryservice.client.OrderServiceClient;
 import com.shopsense.inventoryservice.client.ProductServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
@@ -25,5 +26,17 @@ public class HttpInterfaceConfig {
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter)
                 .build();
         return factory.createClient(ProductServiceClient.class);
+    }
+
+    @Bean
+    public OrderServiceClient orderServiceClient( WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.clone()
+                .baseUrl("http://order-service")
+                .filter(loadBalancerFilter)
+                .build();
+        WebClientAdapter adapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter)
+                .build();
+        return factory.createClient(OrderServiceClient.class);
     }
 }

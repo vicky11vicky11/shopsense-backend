@@ -14,13 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "orders", schema = "orders", uniqueConstraints = { @UniqueConstraint(name = "uk_order_order_number", columnNames = "order_number") })
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "orders", schema = "orders", uniqueConstraints = { @UniqueConstraint(name = "uk_order_order_number", columnNames = "order_number") })
 public class Order {
 
     @Id
@@ -31,7 +31,7 @@ public class Order {
     private String orderNumber;
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -57,14 +57,14 @@ public class Order {
     private Currency currency;
 
     @Column(name = "shipping_address_id", nullable = false)
-    private String shippingAddressId;
+    private UUID shippingAddressId;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderStatusHistory> statusHistory = new ArrayList<>();
 
     @Version

@@ -1,4 +1,4 @@
-package com.shopsense.orderservice.exceptions;
+package com.shopsense.orderservice.exception;
 
 public class BadRequestException extends RuntimeException {
 

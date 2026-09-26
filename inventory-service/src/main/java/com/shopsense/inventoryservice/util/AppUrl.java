@@ -13,5 +13,6 @@ public class AppUrl {
 
     //    Endpoints for Http Clients
     public static final String PRODUCT_URL = BASE_URL + "/products";
+    public static final String ORDER_URL = BASE_URL + "/orders";
 
 }

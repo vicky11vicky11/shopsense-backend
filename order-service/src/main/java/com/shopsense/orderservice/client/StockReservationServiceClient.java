@@ -2,7 +2,7 @@ package com.shopsense.orderservice.client;
 
 import com.shopsense.orderservice.request.ReserveStockRequest;
 import com.shopsense.orderservice.response.StockReservationResponse;
-import com.shopsense.orderservice.utils.AppUrl;
+import com.shopsense.orderservice.util.AppUrl;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.GetExchange;
@@ -27,4 +27,14 @@ public interface StockReservationServiceClient {
 
     @PostExchange("/{reservationId}/consume")
     void consume( @PathVariable UUID reservationId );
+
+    @PostExchange("/order/{orderId}/consume")
+    void consumeByOrderId( @PathVariable UUID orderId );
+
+    @PostExchange("/order/{orderId}/release")
+    void releaseByOrderId( @PathVariable UUID orderId );
+
+    @PostExchange("/order/{orderId}/restore")
+    void restoreConsumedByOrderId( @PathVariable UUID orderId );
+
 }

@@ -11,19 +11,22 @@ import java.util.UUID;
 
 public interface OrderService {
 
-    OrderResponse createOrder( String userId, String idempotencyKey, CreateOrderRequest request );
+    OrderResponse createOrder( UUID userId, String idempotencyKey, CreateOrderRequest request );
 
-    OrderResponse getOrderById( String userId, UUID orderId );
+    OrderResponse getOrderById( UUID userId, UUID orderId );
 
-    OrderResponse getOrderByNumber( String userId, String orderNumber );
+    OrderResponse getOrderByNumber( UUID userId, String orderNumber );
 
     boolean isOrderExists( UUID orderId );
 
-    PageResponse<OrderResponse> getOrders( String userId, PageRequest pageRequest );
+    PageResponse<OrderResponse> getOrders( UUID userId, PageRequest pageRequest );
 
-    PageResponse<OrderResponse> getOrdersByStatus( String userId, OrderStatus status, PageRequest pageRequest );
+    PageResponse<OrderResponse> getOrdersByStatus( UUID userId, OrderStatus status, PageRequest pageRequest );
 
-    OrderResponse updateOrderStatus( String userId, UUID orderId, UpdateOrderStatusRequest request );
+    OrderResponse updateOrderStatus( UUID userId, UUID orderId, UpdateOrderStatusRequest request );
 
-    void cancelOrder( String userId, UUID orderId );
+    void reservationFailedStatusUpdate( UUID orderId );
+
+    void cancelOrder( UUID userId, UUID orderId );
+
 }

@@ -25,6 +25,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -44,12 +47,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentProviderFactory paymentProviderFactory;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
     @Transactional
     public PaymentResponse createPayment( String userId, CreatePaymentRequest request ) {
         ProductOrderResponse order = orderServiceClient.getOrderById(userId, request.getOrderId());
         validateOrderForPayment(order, request.getOrderId());
-        Payment existingPayment = paymentRepository.findByOrderIdAndPaymentGateway(request.getOrderId(), request.getPaymentGateway())
+        Payment existingPayment = paymentRepository.findFirstByOrderIdAndPaymentGatewayOrderByCreatedAtDesc(request.getOrderId(), request.getPaymentGateway())
                 .orElse(null);
         if ( existingPayment != null ) {
             if ( existingPayment.getStatus() == PaymentStatus.SUCCESS ) {
@@ -82,7 +88,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = PaymentException.class)
     public PaymentResponse verifyRazorpayPayment( String userId, UUID paymentId, String gatewayOrderId, String gatewayPaymentId, String signature ) {
         Payment payment = getOwnedPayment(userId, paymentId);
         if ( payment.getPaymentGateway() != PaymentGateway.RAZORPAY ) {
@@ -98,23 +104,25 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(PaymentStatus.FAILED);
             payment.setFailureReason("Payment signature verification failed");
             paymentRepository.save(payment);
-            updateOrderStatus(userId, payment, OrderStatus.PAYMENT_FAILED, "Payment verification failed", "Payment verification failed by payment gateway");
             throw new PaymentException("Invalid payment signature");
         }
-        payment.setGatewayOrderId(gatewayOrderId);
-        payment.setGatewayPaymentId(gatewayPaymentId);
-        payment.setStatus(PaymentStatus.SUCCESS);
-        payment = paymentRepository.save(payment);
-        updateOrderStatus(userId, payment, OrderStatus.CONFIRMED, "Payment successful", "Payment successfully verified by payment gateway");
+        handleSuccessfulPayment(payment, PaymentWebhookEvent.builder()
+                .gateway(PaymentGateway.RAZORPAY)
+                .gatewayOrderId(gatewayOrderId)
+                .gatewayPaymentId(gatewayPaymentId)
+                .paymentStatus(PaymentStatus.SUCCESS)
+                .build());
+        payment = paymentRepository.findById(paymentId).orElseThrow(() -> new PaymentException("Payment not found"));
         return toResponse(payment);
     }
 
     private void updateOrderStatus( String userId, Payment payment, OrderStatus status, String reason, String description ) {
-        orderServiceClient.updateOrderStatus(userId, payment.getOrderId(), UpdateOrderStatusRequest.builder()
+        ProductOrderResponse productOrderResponse = orderServiceClient.updateOrderStatus(userId, payment.getOrderId(), UpdateOrderStatusRequest.builder()
                 .status(status)
                 .reason(reason)
                 .description(description)
                 .build());
+        log.info("Order Status Updated for order {}",productOrderResponse.getId());
     }
 
     @Override
@@ -126,7 +134,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public PaymentResponse getPaymentByOrderId( String userId, UUID orderId ) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
+        Payment payment = paymentRepository.findFirstByOrderIdOrderByCreatedAtDesc(orderId)
                 .orElseThrow(() -> new PaymentException("Payment not found"));
         if ( !payment.getUserId()
                 .equals(userId) ) {
@@ -136,9 +144,13 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = RuntimeException.class)
     public RefundResponse refundPayment( String userId, UUID paymentId, BigDecimal amount, String reason ) {
-        Payment payment = getOwnedPayment(userId, paymentId);
+        Payment payment = paymentRepository.lockById(paymentId)
+                .orElseThrow(() -> new PaymentException("Payment not found"));
+        if ( !payment.getUserId().equals(userId) ) {
+            throw new PaymentException("You are not allowed to access this payment");
+        }
         if ( payment.getStatus() != PaymentStatus.SUCCESS && payment.getStatus() != PaymentStatus.PARTIALLY_REFUNDED ) {
             throw new PaymentException("Payment cannot be refunded");
         }
@@ -162,42 +174,80 @@ public class PaymentServiceImpl implements PaymentService {
                     .reason(reason)
                     .build());
             refund.setGatewayRefundId(result.getGatewayRefundId());
-            refund.setStatus(RefundStatus.REFUNDED);
-            payment.setRefundedAmount(payment.getRefundedAmount()
-                    .add(amount));
-            if ( payment.getRefundedAmount()
-                    .compareTo(payment.getAmount()) == 0 ) {
-                payment.setStatus(PaymentStatus.REFUNDED);
-            } else {
-                payment.setStatus(PaymentStatus.PARTIALLY_REFUNDED);
+            boolean completed = result.getStatus() != null && (result.getStatus().equalsIgnoreCase("succeeded") || result.getStatus().equalsIgnoreCase("processed") || result.getStatus().equalsIgnoreCase("refunded"));
+            refund.setStatus(completed ? RefundStatus.REFUNDED : RefundStatus.PENDING);
+            if ( completed ) {
+                payment.setRefundedAmount(payment.getRefundedAmount().add(amount));
+                if ( payment.getRefundedAmount().compareTo(payment.getAmount()) >= 0 ) {
+                    payment.setStatus(PaymentStatus.REFUNDED);
+                } else {
+                    payment.setStatus(PaymentStatus.PARTIALLY_REFUNDED);
+                }
             }
             refund = refundRepository.save(refund);
-            paymentRepository.save(payment);
+            if ( completed ) paymentRepository.save(payment);
             return toRefundResponse(refund);
         } catch ( Exception exception ) {
             refund.setStatus(RefundStatus.FAILED);
             refund.setFailureReason(exception.getMessage());
             refundRepository.save(refund);
-            throw exception;
+            return toRefundResponse(refund);
         }
     }
 
     @Override
     @Transactional
+    public RefundResponse refundOrder( String userId, UUID orderId ) {
+        java.util.List<Payment> capturedPayments = paymentRepository.findByUserId(userId).stream()
+                .filter(candidate -> candidate.getOrderId().equals(orderId))
+                .filter(candidate -> candidate.getStatus() == PaymentStatus.SUCCESS || candidate.getStatus() == PaymentStatus.PARTIALLY_REFUNDED || candidate.getStatus() == PaymentStatus.REFUNDED)
+                .sorted(java.util.Comparator.comparing(Payment::getCreatedAt))
+                .toList();
+        if ( capturedPayments.isEmpty() ) {
+            throw new PaymentException("No successful payment exists for this order");
+        }
+        RefundResponse latestResponse = null;
+        boolean allRefunded = true;
+        for ( Payment payment : capturedPayments ) {
+            BigDecimal amount = payment.getAmount().subtract(payment.getRefundedAmount());
+            if ( amount.signum() <= 0 ) {
+                latestResponse = refundRepository.findByPaymentId(payment.getId()).stream()
+                        .max(java.util.Comparator.comparing(Refund::getCreatedAt))
+                        .map(this::toRefundResponse).orElse(latestResponse);
+                continue;
+            }
+            if ( refundRepository.existsByPaymentIdAndStatus(payment.getId(), RefundStatus.PENDING) ) {
+                allRefunded = false;
+                latestResponse = refundRepository.findByPaymentId(payment.getId()).stream()
+                        .filter(existing -> existing.getStatus() == RefundStatus.PENDING)
+                        .max(java.util.Comparator.comparing(Refund::getCreatedAt))
+                        .map(this::toRefundResponse).orElse(latestResponse);
+                continue;
+            }
+            latestResponse = refundPayment(userId, payment.getId(), amount, "Order cancelled by customer");
+            if ( latestResponse.getStatus() != RefundStatus.REFUNDED ) allRefunded = false;
+        }
+        if ( allRefunded && latestResponse != null ) return latestResponse;
+        if ( latestResponse != null ) latestResponse.setStatus(RefundStatus.PENDING);
+        return latestResponse;
+    }
+
+    @Override
+    @Transactional
     public void handleWebhook( PaymentGateway gateway, String payload, String signature, String eventId ) {
-        log.info("WEBHOOK PROCESSING STARTED | gateway={} | eventId={}", gateway, eventId);
         PaymentProvider provider = paymentProviderFactory.getProvider(gateway);
-        log.debug("WEBHOOK PROVIDER RESOLVED | gateway={} | provider={}", gateway, provider.getClass()
-                .getSimpleName());
         PaymentWebhookEvent event = provider.parseWebhook(payload, signature, eventId);
-        log.info("WEBHOOK PARSED | gateway={} | eventId={} | eventType={} | paymentId={} | orderId={} | status={}", gateway, event.getEventId(), event.getEventType(), event.getGatewayPaymentId(), event.getGatewayOrderId(), event.getPaymentStatus());
         if ( event.getEventId() == null ) {
-            log.error("WEBHOOK REJECTED | gateway={} | reason=Missing event ID", gateway);
             throw new PaymentException("Webhook event ID is missing");
         }
         boolean alreadyProcessed = processedWebhookEventRepository.existsByGatewayAndEventId(gateway.name(), event.getEventId());
         if ( alreadyProcessed ) {
             log.warn("WEBHOOK ALREADY PROCESSED | gateway={} | eventId={} | eventType={}", gateway, event.getEventId(), event.getEventType());
+            return;
+        }
+        if ( event.getGatewayRefundId() != null && event.getRefundStatus() != null ) {
+            handleRefundWebhook(event);
+            saveProcessedWebhookEvent(event);
             return;
         }
         if ( event.getPaymentStatus() == null ) {
@@ -295,8 +345,29 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void handleSuccessfulPayment( Payment payment, PaymentWebhookEvent event ) {
+        // Serialize all successful webhook attempts for an order so only one capture is kept.
+        java.util.List<Payment> orderPayments = paymentRepository.lockAllByOrderId(payment.getOrderId());
+        for ( Payment orderPayment : orderPayments ) {
+            entityManager.refresh(orderPayment, LockModeType.PESSIMISTIC_WRITE);
+        }
         if ( payment.getStatus() == PaymentStatus.SUCCESS ) {
             log.info("PAYMENT ALREADY SUCCESSFUL | paymentId={} | orderId={}", payment.getId(), payment.getOrderId());
+            return;
+        }
+        if ( orderPayments.stream().anyMatch(other -> !other.getId().equals(payment.getId()) && other.getStatus() == PaymentStatus.SUCCESS) ) {
+            payment.setStatus(PaymentStatus.SUCCESS);
+            if ( event.getGatewayPaymentId() != null ) payment.setGatewayPaymentId(event.getGatewayPaymentId());
+            paymentRepository.save(payment);
+            refundPayment(payment.getUserId(), payment.getId(), payment.getAmount().subtract(payment.getRefundedAmount()), "Duplicate successful payment for order");
+            return;
+        }
+        ProductOrderResponse order = orderServiceClient.getOrderById(payment.getUserId(), payment.getOrderId());
+        if ( order.getStatus() != OrderStatus.PAYMENT_PENDING ) {
+            payment.setStatus(PaymentStatus.SUCCESS);
+            if ( event.getGatewayPaymentId() != null ) payment.setGatewayPaymentId(event.getGatewayPaymentId());
+            paymentRepository.save(payment);
+            // A payment arriving after the reservation/order was cancelled must be returned.
+            refundPayment(payment.getUserId(), payment.getId(), payment.getAmount().subtract(payment.getRefundedAmount()), "Payment succeeded after order was no longer payable");
             return;
         }
         log.info("SETTING PAYMENT SUCCESS | paymentId={} | orderId={} | gatewayPaymentId={}", payment.getId(), payment.getOrderId(), event.getGatewayPaymentId());
@@ -328,8 +399,6 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setFailureReason(failureReason);
         paymentRepository.save(payment);
         log.warn("PAYMENT MARKED FAILED | paymentId={} | orderId={}", payment.getId(), payment.getOrderId());
-        updateOrderStatus(payment.getUserId(), payment, OrderStatus.PAYMENT_FAILED, "Payment failed", failureReason);
-        log.warn("ORDER MARKED PAYMENT_FAILED | orderId={}", payment.getOrderId());
     }
 
     private void saveProcessedWebhookEvent( PaymentWebhookEvent event ) {
@@ -341,5 +410,24 @@ public class PaymentServiceImpl implements PaymentService {
                 .processedAt(java.time.Instant.now())
                 .build();
         processedWebhookEventRepository.save(processedEvent);
+    }
+
+    private void handleRefundWebhook( PaymentWebhookEvent event ) {
+        Refund refund = refundRepository.findByGatewayRefundId(event.getGatewayRefundId())
+                .orElseThrow(() -> new PaymentException("Refund not found for webhook: " + event.getGatewayRefundId()));
+        RefundStatus previousStatus = refund.getStatus();
+        refund.setStatus(event.getRefundStatus());
+        refund.setFailureReason(event.getRefundStatus() == RefundStatus.FAILED ? event.getFailureReason() : null);
+        refundRepository.save(refund);
+        Payment payment = refund.getPayment();
+        if ( event.getRefundStatus() == RefundStatus.REFUNDED && previousStatus != RefundStatus.REFUNDED ) {
+            payment.setRefundedAmount(payment.getRefundedAmount().add(refund.getAmount()));
+            payment.setStatus(payment.getRefundedAmount().compareTo(payment.getAmount()) >= 0 ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
+            paymentRepository.save(payment);
+            ProductOrderResponse order = orderServiceClient.getOrderById(payment.getUserId(), payment.getOrderId());
+            if ( order.getStatus() == OrderStatus.REFUND_PENDING ) {
+                updateOrderStatus(payment.getUserId(), payment, OrderStatus.REFUNDED, "Refund completed", "Order payment was refunded successfully");
+            }
+        }
     }
 }

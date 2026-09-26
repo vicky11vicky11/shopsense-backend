@@ -1,4 +1,4 @@
-package com.shopsense.orderservice.exceptions;
+package com.shopsense.orderservice.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
@@ -36,11 +36,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateKeyException.class)
     public ProblemDetail handleDuplicateKeyException( DuplicateKeyException ex ) {
         return buildProblemDetail(HttpStatus.CONFLICT, "Duplicate Resource", "A record with the same value already exists");
-    }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ProblemDetail handleValidationException( ConstraintViolationException ex ) {
-        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Validation Failed", ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

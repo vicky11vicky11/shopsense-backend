@@ -52,4 +52,9 @@ public class PaymentController {
         return ResponseEntity.ok(refundResponse);
     }
 
+    @PostMapping("/order/{orderId}/refund")
+    public ResponseEntity<RefundResponse> refundOrder( @RequestHeader("X-User-Id") String userId, @PathVariable UUID orderId ) {
+        return ResponseEntity.ok(paymentService.refundOrder(userId, orderId));
+    }
+
 }

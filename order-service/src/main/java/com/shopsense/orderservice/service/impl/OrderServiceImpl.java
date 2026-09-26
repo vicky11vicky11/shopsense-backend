@@ -1,14 +1,17 @@
 package com.shopsense.orderservice.service.impl;
 
-import com.shopsense.orderservice.client.*;
+import com.shopsense.orderservice.client.AddressServiceClient;
+import com.shopsense.orderservice.client.MediaServiceClient;
+import com.shopsense.orderservice.client.ProductServiceClient;
+import com.shopsense.orderservice.client.StockReservationServiceClient;
 import com.shopsense.orderservice.entity.Order;
 import com.shopsense.orderservice.entity.OrderIdempotency;
 import com.shopsense.orderservice.entity.OrderItem;
 import com.shopsense.orderservice.entity.OrderStatusHistory;
 import com.shopsense.orderservice.enums.OrderStatus;
 import com.shopsense.orderservice.enums.ReservationStatus;
-import com.shopsense.orderservice.exceptions.BadRequestException;
-import com.shopsense.orderservice.exceptions.ResourceNotFoundException;
+import com.shopsense.orderservice.exception.BadRequestException;
+import com.shopsense.orderservice.exception.ResourceNotFoundException;
 import com.shopsense.orderservice.mapper.OrderMapper;
 import com.shopsense.orderservice.repository.OrderIdempotencyRepository;
 import com.shopsense.orderservice.repository.OrderRepository;
@@ -57,8 +60,6 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderMapper orderMapper;
 
-    private final CustomerServiceClient customerServiceClient;
-
     private final AddressServiceClient addressServiceClient;
 
     private final ProductServiceClient productServiceClient;
@@ -67,14 +68,16 @@ public class OrderServiceImpl implements OrderService {
 
     private final StockReservationServiceClient stockReservationServiceClient;
 
+    private final com.shopsense.orderservice.client.PaymentServiceClient paymentServiceClient;
+
     @Override
-    public OrderResponse createOrder( String userId, String idempotencyKey, CreateOrderRequest request ) {
-        validateUser(userId);
+    @Transactional
+    public OrderResponse createOrder( UUID userId, String idempotencyKey, CreateOrderRequest request ) {
         OrderResponse existingOrder = findExistingOrder(userId, idempotencyKey);
         if ( existingOrder != null ) {
             return existingOrder;
         }
-        validateCreateOrderRequest(request);
+        validateCreateOrderRequest(userId, request);
         CartResponse cartResponse = cartService.getCart(userId);
         validateCartItems(cartResponse, request.getItems());
         String orderNumber = generateOrderNumber();
@@ -94,7 +97,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         for ( OrderItemRequest itemRequest : request.getItems() ) {
             ProductResponse productResponse = productServiceClient.getProduct(itemRequest.getProductId());
-            String productImageId = null;
+            UUID productImageId = null;
             String productImageUrl = null;
             if ( productResponse.getProductImages() != null && !productResponse.getProductImages()
                     .isEmpty() ) {
@@ -168,7 +171,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         orderIdempotencyRepository.save(idempotency);
         for ( OrderItemRequest item : request.getItems() ) {
-            cartService.removeItem(userId, item.getProductId());
+            cartService.decreaseItemQuantity(userId, item.getProductId(), item.getQuantity());
         }
         log.info("Order created successfully: orderId={}, orderNumber={}, userId={}, status={}", savedOrder.getId(), savedOrder.getOrderNumber(), userId, savedOrder.getStatus());
         return orderMapper.toResponse(savedOrder);
@@ -176,22 +179,20 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderResponse getOrderById( String userId, UUID orderId ) {
-        validateUser(userId);
+    public OrderResponse getOrderById( UUID userId, UUID orderId ) {
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         log.info("Order fetched successfully: orderId={}, userId={}", orderId, userId);
         return orderMapper.toResponse(order);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OrderResponse getOrderByNumber( String userId, String orderNumber ) {
-        validateUser(userId);
+    public OrderResponse getOrderByNumber( UUID userId, String orderNumber ) {
         Order order = orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with order number: " + orderNumber));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         if ( !userId.equals(order.getUserId()) ) {
-            throw new ResourceNotFoundException("Order not found with order number: " + orderNumber);
+            throw new ResourceNotFoundException("Order not found");
         }
         log.info("Order fetched successfully: orderNumber={}, userId={}", orderNumber, userId);
         return orderMapper.toResponse(order);
@@ -210,8 +211,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderResponse> getOrders( String userId, PageRequest pageRequest ) {
-        validateUser(userId);
+    public PageResponse<OrderResponse> getOrders( UUID userId, PageRequest pageRequest ) {
         Page<Order> orderPage = orderRepository.findByUserId(userId, pageRequest);
         log.info("Orders fetched successfully: userId={}, page={}, size={}, totalElements={}", userId, pageRequest.getPageNumber(), pageRequest.getPageSize(), orderPage.getTotalElements());
         return PageResponse.from(orderPage, orderMapper::toResponse);
@@ -219,8 +219,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<OrderResponse> getOrdersByStatus( String userId, OrderStatus status, PageRequest pageRequest ) {
-        validateUser(userId);
+    public PageResponse<OrderResponse> getOrdersByStatus( UUID userId, OrderStatus status, PageRequest pageRequest ) {
         if ( status == null ) {
             throw new IllegalArgumentException("Order status is required");
         }
@@ -230,15 +229,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse updateOrderStatus( String userId, UUID orderId, UpdateOrderStatusRequest request ) {
-        validateUser(userId);
+    @Transactional
+    public OrderResponse updateOrderStatus( UUID userId, UUID orderId, UpdateOrderStatusRequest request ) {
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         OrderStatus currentStatus = order.getStatus();
         OrderStatus newStatus = request.getStatus();
         validateStatusTransition(currentStatus, newStatus);
         if ( currentStatus == newStatus ) {
             return orderMapper.toResponse(order);
+        }
+        // Consume the hold before confirming. The inventory operation is idempotent,
+        // so a retried gateway webhook can safely repeat this transition.
+        if ( newStatus == OrderStatus.CONFIRMED ) {
+            stockReservationServiceClient.consumeByOrderId(orderId);
         }
         order.setStatus(newStatus);
         Order savedOrder = orderRepository.saveAndFlush(order);
@@ -248,74 +252,71 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void cancelOrder( String userId, UUID orderId ) {
-        validateUser(userId);
-        Order order = orderRepository.findByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        validateCancellation(order);
+    @Transactional
+    public void reservationFailedStatusUpdate( UUID orderId ) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         OrderStatus previousStatus = order.getStatus();
-        StockReservationResponse reservationResponse = stockReservationServiceClient.getByOrderId(order.getId());
-        if ( reservationResponse != null && reservationResponse.getItems() != null ) {
-            for ( StockReservationResponse.ReservationItemResponse item : reservationResponse.getItems() ) {
-                stockReservationServiceClient.release(item.getReservationId());
-            }
+        if ( previousStatus != OrderStatus.PAYMENT_PENDING && previousStatus != OrderStatus.PENDING_RESERVATION ) {
+            return;
         }
         order.setStatus(OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.saveAndFlush(order);
-        saveStatusHistory(savedOrder, previousStatus, OrderStatus.CANCELLED, "Order cancelled", "Order cancelled by customer");
+        saveStatusHistory(savedOrder, previousStatus, OrderStatus.CANCELLED, "Order Cancelled", "Order cancelled because inventory reservation expired.");
+        log.info("Order cancelled successfully: orderId={}, orderNumber={}, userId={}, previousStatus={}, status={}", orderId, savedOrder.getOrderNumber(), order.getUserId(), previousStatus, savedOrder.getStatus());
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder( UUID userId, UUID orderId ) {
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        if ( order.getStatus() == OrderStatus.REFUND_PENDING ) {
+            completeRefundIfReady(order, userId);
+            return;
+        }
+        validateCancellation(order);
+        OrderStatus previousStatus = order.getStatus();
+        boolean paidOrder = previousStatus == OrderStatus.CONFIRMED;
+        if ( paidOrder ) {
+            stockReservationServiceClient.restoreConsumedByOrderId(order.getId());
+        }
+        StockReservationResponse reservationResponse = stockReservationServiceClient.getByOrderId(order.getId());
+        if ( reservationResponse != null && reservationResponse.getItems() != null ) {
+            stockReservationServiceClient.releaseByOrderId(order.getId());
+        }
+        order.setStatus(paidOrder ? OrderStatus.REFUND_PENDING : OrderStatus.CANCELLED);
+        Order savedOrder = orderRepository.saveAndFlush(order);
+        saveStatusHistory(savedOrder, previousStatus, savedOrder.getStatus(), paidOrder ? "Refund requested" : "Order cancelled", "Order cancelled by customer");
+        if ( paidOrder ) {
+            completeRefundIfReady(savedOrder, userId);
+        }
         log.info("Order cancelled successfully: orderId={}, orderNumber={}, userId={}, previousStatus={}, status={}", orderId, savedOrder.getOrderNumber(), userId, previousStatus, savedOrder.getStatus());
     }
 
-    private void validateCreateOrderRequest( CreateOrderRequest request ) {
-        if ( request == null ) {
-            throw new IllegalArgumentException("Create order request is required");
+    private void completeRefundIfReady( Order order, UUID userId ) {
+        com.shopsense.orderservice.response.PaymentRefundResponse refund = paymentServiceClient.refundOrder(userId.toString(), order.getId());
+        if ( refund != null && "REFUNDED".equalsIgnoreCase(refund.getStatus()) && order.getStatus() == OrderStatus.REFUND_PENDING ) {
+            order.setStatus(OrderStatus.REFUNDED);
+            Order savedOrder = orderRepository.saveAndFlush(order);
+            saveStatusHistory(savedOrder, OrderStatus.REFUND_PENDING, OrderStatus.REFUNDED, "Refund completed", "Payment refund completed successfully");
         }
-        if ( request.getItems() == null || request.getItems()
-                .isEmpty() ) {
-            throw new IllegalArgumentException("At least one item is required");
-        }
-        if ( request.getShippingAddressId() == null || request.getShippingAddressId()
-                .trim()
-                .isEmpty() ) {
-            throw new IllegalArgumentException("Shipping address ID is required");
-        }
-        validateAddress(request.getShippingAddressId());
+    }
+
+    private void validateCreateOrderRequest( UUID userId, CreateOrderRequest request ) {
+        validateAddress(userId, request.getShippingAddressId());
         Set<UUID> productIds = new HashSet<>();
         for ( OrderItemRequest item : request.getItems() ) {
-            if ( item == null ) {
-                throw new IllegalArgumentException("Order item cannot be null");
-            }
-            if ( item.getProductId() == null ) {
-                throw new IllegalArgumentException("Product ID is required");
-            }
-            validateProduct(item.getProductId());
-            if ( item.getQuantity() == null || item.getQuantity() <= 0 ) {
-                throw new IllegalArgumentException("Quantity must be greater than zero");
-            }
             if ( !productIds.add(item.getProductId()) ) {
-                throw new IllegalArgumentException("Duplicate product in order: " + item.getProductId());
+                throw new IllegalArgumentException("Duplicate product");
             }
         }
     }
 
-    private void validateUser( String userId ) {
-        boolean customerExists = customerServiceClient.isCustomerExists(userId);
-        if ( !customerExists ) {
-            throw new ResourceNotFoundException("Customer not found with id: " + userId);
-        }
-    }
-
-    private void validateAddress( String addressId ) {
-        boolean addressExists = addressServiceClient.isAddressExists(addressId);
+    private void validateAddress( UUID userId, UUID addressId ) {
+        boolean addressExists = addressServiceClient.isAddressExists(addressId, userId);
         if ( !addressExists ) {
-            throw new ResourceNotFoundException("Address not found with id: " + addressId);
-        }
-    }
-
-    private void validateProduct( UUID productId ) {
-        boolean productExists = productServiceClient.isProductExists(productId);
-        if ( !productExists ) {
-            throw new ResourceNotFoundException("Product not found with id: " + productId);
+            throw new ResourceNotFoundException("Address not found ");
         }
     }
 
@@ -330,7 +331,7 @@ public class OrderServiceImpl implements OrderService {
                     .filter(item -> item.getProductId()
                             .equals(requestedItem.getProductId()))
                     .findFirst()
-                    .orElseThrow(() -> new BadRequestException("Product is not present in the cart: " + requestedItem.getProductId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product is not present in the cart"));
             if ( requestedItem.getQuantity() > cartItem.getQuantity() ) {
                 throw new BadRequestException("Requested quantity for product " + requestedItem.getProductId() + " exceeds cart quantity");
             }
@@ -348,32 +349,23 @@ public class OrderServiceImpl implements OrderService {
         if ( status == OrderStatus.DELIVERED ) {
             throw new IllegalStateException("Delivered order cannot be cancelled");
         }
+        if ( status == OrderStatus.REFUND_PENDING || status == OrderStatus.REFUNDED ) {
+            throw new IllegalStateException("Order refund is already in progress or complete");
+        }
     }
 
     private void validateStatusTransition( OrderStatus currentStatus, OrderStatus newStatus ) {
-        if ( currentStatus == OrderStatus.CANCELLED ) {
-            throw new BadRequestException("Cancelled order cannot change status");
-        }
-        if ( currentStatus == OrderStatus.DELIVERED ) {
-            throw new BadRequestException("Delivered order cannot change status");
-        }
-        if ( currentStatus == OrderStatus.SHIPPED && newStatus != OrderStatus.DELIVERED ) {
-            throw new BadRequestException("Shipped order can only move to DELIVERED");
-        }
-        if ( currentStatus == OrderStatus.PROCESSING && newStatus != OrderStatus.SHIPPED ) {
-            throw new BadRequestException("Processing order can only move to SHIPPED");
-        }
-        if ( currentStatus == OrderStatus.CONFIRMED && newStatus != OrderStatus.PROCESSING ) {
-            throw new BadRequestException("Confirmed order can only move to PROCESSING");
-        }
-        if ( currentStatus == OrderStatus.PAYMENT_PENDING && newStatus != OrderStatus.CONFIRMED && newStatus != OrderStatus.PAYMENT_FAILED && newStatus != OrderStatus.CANCELLED ) {
-            throw new BadRequestException("Payment pending order can only become CONFIRMED, PAYMENT_FAILED or CANCELLED");
-        }
-        if ( currentStatus == OrderStatus.PAYMENT_FAILED && newStatus != OrderStatus.PAYMENT_PENDING && newStatus != OrderStatus.CANCELLED ) {
-            throw new BadRequestException("Payment failed order can only return to PAYMENT_PENDING or become CANCELLED");
-        }
-        if ( currentStatus == OrderStatus.RESERVED && newStatus != OrderStatus.PAYMENT_PENDING && newStatus != OrderStatus.CANCELLED ) {
-            throw new BadRequestException("Reserved order can only move to PAYMENT_PENDING or CANCELLED");
+        boolean allowed = switch ( currentStatus ) {
+            case PENDING_RESERVATION -> newStatus == OrderStatus.PAYMENT_PENDING || newStatus == OrderStatus.CANCELLED;
+            case PAYMENT_PENDING -> newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.CANCELLED;
+            case CONFIRMED -> newStatus == OrderStatus.SHIPPED || newStatus == OrderStatus.REFUND_PENDING;
+            case SHIPPED -> newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.REFUND_PENDING;
+            case DELIVERED -> newStatus == OrderStatus.REFUND_PENDING;
+            case REFUND_PENDING -> newStatus == OrderStatus.REFUNDED || newStatus == OrderStatus.CANCELLED;
+            case CANCELLED, REFUNDED -> false;
+        };
+        if ( !allowed ) {
+            throw new BadRequestException("Invalid order status transition: " + currentStatus + " -> " + newStatus);
         }
     }
 
@@ -395,7 +387,7 @@ public class OrderServiceImpl implements OrderService {
         return shippingRate.movePointLeft(2);
     }
 
-    private OrderResponse findExistingOrder( String userId, String idempotencyKey ) {
+    private OrderResponse findExistingOrder( UUID userId, String idempotencyKey ) {
         if ( idempotencyKey == null || idempotencyKey.isBlank() ) {
             throw new BadRequestException("Idempotency-Key is required");
         }

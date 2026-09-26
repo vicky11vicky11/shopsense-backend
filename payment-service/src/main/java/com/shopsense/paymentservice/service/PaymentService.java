@@ -20,5 +20,7 @@ public interface PaymentService {
 
     RefundResponse refundPayment( String userId, UUID paymentId, BigDecimal amount, String reason );
 
+    RefundResponse refundOrder( String userId, UUID orderId );
+
     void handleWebhook( PaymentGateway gateway, String payload, String signature, String eventId );
 }

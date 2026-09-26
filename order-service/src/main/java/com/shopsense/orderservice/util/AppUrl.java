@@ -1,4 +1,4 @@
-package com.shopsense.orderservice.utils;
+package com.shopsense.orderservice.util;
 
 public class AppUrl {
 

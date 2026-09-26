@@ -1,5 +1,6 @@
 package com.shopsense.inventoryservice.service.impl;
 
+import com.shopsense.inventoryservice.client.OrderServiceClient;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.entity.StockReservation;
 import com.shopsense.inventoryservice.enums.ReservationStatus;
@@ -27,6 +28,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class StockReservationServiceImpl implements StockReservationService {
 
+    private final OrderServiceClient orderServiceClient;
     @Value("${reservation.expiry}")
     private long RESERVATION_DURATION_MINUTES;
 
@@ -152,10 +154,13 @@ public class StockReservationServiceImpl implements StockReservationService {
     public void expireReservations() {
         Instant now = Instant.now();
         List<StockReservation> expiredReservations = stockReservationRepository.findExpiredReservations(now);
+        Set<UUID> orderIds = new HashSet<>();
         for ( StockReservation reservation : expiredReservations ) {
             expireReservation(reservation);
             log.info("Reservation expired: reservationId={}, orderId={}, productId={}", reservation.getId(), reservation.getOrderId(), reservation.getProductId());
+            orderIds.add(reservation.getOrderId());
         }
+        orderIds.forEach(orderServiceClient::reservationFailedStatusUpdate);
     }
 
     @Override
@@ -179,6 +184,27 @@ public class StockReservationServiceImpl implements StockReservationService {
         }
         for ( StockReservation reservation : stockReservations ) {
             consume(reservation.getId());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void restoreConsumedByOrder( UUID orderId ) {
+        List<StockReservation> reservations = stockReservationRepository.findByOrderIdAndStatus(orderId, ReservationStatus.CONSUMED);
+        for ( StockReservation reservation : reservations ) {
+            int updatedRows = inventoryRepository.adjustStock(reservation.getProductId(), reservation.getQuantity());
+            if ( updatedRows == 0 ) {
+                throw new IllegalStateException("Unable to restore consumed stock: " + reservation.getId());
+            }
+            reservation.setStatus(ReservationStatus.RELEASED);
+            stockReservationRepository.saveAndFlush(reservation);
+            stockMovementRepository.saveAndFlush(StockMovement.builder()
+                    .productId(reservation.getProductId())
+                    .type(StockMovementType.STOCK_IN)
+                    .quantity(reservation.getQuantity())
+                    .referenceId(reservation.getId())
+                    .reason("Consumed stock restored for cancelled order: " + orderId)
+                    .build());
         }
     }
 

@@ -1,10 +1,8 @@
 package com.shopsense.orderservice.service.impl;
 
-import com.shopsense.orderservice.client.CustomerServiceClient;
 import com.shopsense.orderservice.client.ProductServiceClient;
 import com.shopsense.orderservice.entity.CartItem;
-import com.shopsense.orderservice.exceptions.BadRequestException;
-import com.shopsense.orderservice.exceptions.ResourceNotFoundException;
+import com.shopsense.orderservice.exception.ResourceNotFoundException;
 import com.shopsense.orderservice.request.AddToCartRequest;
 import com.shopsense.orderservice.request.UpdateCartItemRequest;
 import com.shopsense.orderservice.response.CartItemResponse;
@@ -20,7 +18,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -38,22 +35,10 @@ public class CartServiceImpl implements CartService {
 
     private final ObjectMapper objectMapper;
 
-    private final CustomerServiceClient customerServiceClient;
-
     private final ProductServiceClient productServiceClient;
 
     @Override
-    public CartResponse getCart( String userId ) {
-        validateCustomer(userId);
-        String cartKey = getCartKey(userId);
-        List<CartItem> items = getCartItems(cartKey);
-        log.debug("Cart fetched successfully: userId={}, cartKey={}, itemCount={}", userId, cartKey, items.size());
-        return buildCartResponse(userId, items);
-    }
-
-    @Override
-    public CartResponse addItem( String userId, AddToCartRequest request ) {
-        validateCustomer(userId);
+    public CartResponse addItem( UUID userId, AddToCartRequest request ) {
         String cartKey = getCartKey(userId);
         validateProduct(request.getProductId());
         CartItem existingItem = getCartItem(cartKey, request.getProductId());
@@ -75,13 +60,19 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartResponse updateItem( String userId, UUID productId, UpdateCartItemRequest request ) {
-        validateCustomer(userId);
-        validateProduct(productId);
+    public CartResponse getCart( UUID userId ) {
+        String cartKey = getCartKey(userId);
+        List<CartItem> items = getCartItems(cartKey);
+        log.debug("Cart fetched successfully: userId={}, cartKey={}, itemCount={}", userId, cartKey, items.size());
+        return buildCartResponse(userId, items);
+    }
+
+    @Override
+    public CartResponse updateItem( UUID userId, UUID productId, UpdateCartItemRequest request ) {
         String cartKey = getCartKey(userId);
         CartItem existingItem = getCartItem(cartKey, productId);
         if ( existingItem == null ) {
-            throw new BadRequestException("Product is not present in the cart");
+            throw new ResourceNotFoundException("Product is not present in the cart");
         }
         CartItem cartItem = CartItem.builder()
                 .productId(productId)
@@ -95,12 +86,42 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void removeItem( String userId, UUID productId ) {
-        validateCustomer(userId);
+    public void decreaseItemQuantity( UUID userId, UUID productId, int quantity ) {
+        if ( quantity <= 0 ) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
         String cartKey = getCartKey(userId);
         CartItem existingItem = getCartItem(cartKey, productId);
         if ( existingItem == null ) {
-            throw new BadRequestException("Product is not present in the cart");
+            throw new ResourceNotFoundException("Product is not present in the cart");
+        }
+        int currentQuantity = existingItem.getQuantity();
+        if ( quantity > currentQuantity ) {
+            throw new IllegalArgumentException("Requested quantity exceeds cart quantity");
+        }
+        int remainingQuantity = currentQuantity - quantity;
+        if ( remainingQuantity == 0 ) {
+            redisTemplate.opsForHash()
+                    .delete(cartKey, productId.toString());
+            log.info("Cart item removed after checkout: userId={}, productId={}", userId, productId);
+        } else {
+            CartItem updatedItem = CartItem.builder()
+                    .productId(productId)
+                    .quantity(remainingQuantity)
+                    .build();
+            redisTemplate.opsForHash()
+                    .put(cartKey, productId.toString(), updatedItem);
+            log.info("Cart item quantity decreased: userId={}, productId={}, oldQuantity={}, decreasedBy={}, remainingQuantity={}", userId, productId, currentQuantity, quantity, remainingQuantity);
+        }
+        refreshCartTtl(cartKey);
+    }
+
+    @Override
+    public void removeItem( UUID userId, UUID productId ) {
+        String cartKey = getCartKey(userId);
+        CartItem existingItem = getCartItem(cartKey, productId);
+        if ( existingItem == null ) {
+            throw new ResourceNotFoundException("Product is not present in the cart");
         }
         redisTemplate.opsForHash()
                 .delete(cartKey, productId.toString());
@@ -109,8 +130,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void clearCart( String userId ) {
-        validateCustomer(userId);
+    public void clearCart( UUID userId ) {
         String cartKey = getCartKey(userId);
         redisTemplate.delete(cartKey);
         log.info("Cart cleared successfully: userId={}, cartKey={}", userId, cartKey);
@@ -135,7 +155,7 @@ public class CartServiceImpl implements CartService {
         return items;
     }
 
-    private CartResponse buildCartResponse( String userId, List<CartItem> items ) {
+    private CartResponse buildCartResponse( UUID userId, List<CartItem> items ) {
         List<CartItemResponse> itemResponses = items.stream()
                 .map(item -> CartItemResponse.builder()
                         .productId(item.getProductId())
@@ -152,7 +172,7 @@ public class CartServiceImpl implements CartService {
                 .build();
     }
 
-    private String getCartKey( String userId ) {
+    private String getCartKey( UUID userId ) {
         return cartKeyPrefix + userId;
     }
 
@@ -161,14 +181,7 @@ public class CartServiceImpl implements CartService {
         redisTemplate.expire(cartKey, duration);
     }
 
-    private void validateCustomer(String userId ) {
-        boolean customerExists = customerServiceClient.isCustomerExists(userId);
-        if (!customerExists) {
-            throw new ResourceNotFoundException("Customer does not exist");
-        }
-    }
-
-    private void validateProduct(UUID productId ) {
+    private void validateProduct( UUID productId ) {
         boolean productExists = productServiceClient.isProductExists(productId);
         if ( !productExists ) {
             throw new ResourceNotFoundException("Product does not exist");

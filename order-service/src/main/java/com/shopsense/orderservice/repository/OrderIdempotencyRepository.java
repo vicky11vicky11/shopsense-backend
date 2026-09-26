@@ -10,5 +10,5 @@ import java.util.UUID;
 @Repository
 public interface OrderIdempotencyRepository extends JpaRepository<OrderIdempotency, UUID> {
 
-    Optional<OrderIdempotency> findByUserIdAndIdempotencyKey( String userId, String idempotencyKey );
+    Optional<OrderIdempotency> findByUserIdAndIdempotencyKey( UUID userId, String idempotencyKey );
 }

@@ -22,7 +22,7 @@ public class OrderIdempotency {
     private UUID id;
 
     @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
+    private UUID userId;
 
     @Column(name = "idempotency_key", nullable = false, length = 100)
     private String idempotencyKey;

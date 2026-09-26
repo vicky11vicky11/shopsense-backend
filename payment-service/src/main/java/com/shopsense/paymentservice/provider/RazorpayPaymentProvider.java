@@ -7,6 +7,7 @@ import com.razorpay.Utils;
 import com.shopsense.paymentservice.config.RazorpayProperties;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
+import com.shopsense.paymentservice.enums.RefundStatus;
 import com.shopsense.paymentservice.exceptions.WebhookVerificationException;
 import com.shopsense.paymentservice.request.CreateGatewayPaymentRequest;
 import com.shopsense.paymentservice.request.GatewayRefundRequest;
@@ -20,6 +21,9 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 
 @Component
 @RequiredArgsConstructor
@@ -90,10 +94,23 @@ public class RazorpayPaymentProvider implements PaymentProvider {
             if ( payloadObject == null ) {
                 throw new WebhookVerificationException("Razorpay webhook payload is missing");
             }
+            String stableEventId = eventId != null && !eventId.isBlank() ? eventId : fallbackEventId(payload);
+            JSONObject refundObject = extractRefundEntity(payloadObject);
+            if ( refundObject != null ) {
+                return PaymentWebhookEvent.builder()
+                        .eventId(stableEventId)
+                        .gateway(PaymentGateway.RAZORPAY)
+                        .eventType(eventType)
+                        .gatewayRefundId(refundObject.optString("id", null))
+                        .gatewayPaymentId(refundObject.optString("payment_id", null))
+                        .refundStatus(mapRefundStatus(eventType, refundObject.optString("status", null)))
+                        .failureReason(refundObject.optString("error_description", null))
+                        .build();
+            }
             JSONObject paymentObject = extractPaymentEntity(payloadObject);
             if ( paymentObject == null ) {
                 return PaymentWebhookEvent.builder()
-                        .eventId(eventId)
+                        .eventId(stableEventId)
                         .gateway(PaymentGateway.RAZORPAY)
                         .eventType(eventType)
                         .build();
@@ -107,7 +124,7 @@ public class RazorpayPaymentProvider implements PaymentProvider {
                 failureReason = paymentObject.optString("error_description", null);
             }
             return PaymentWebhookEvent.builder()
-                    .eventId(eventId)
+                    .eventId(stableEventId)
                     .gateway(PaymentGateway.RAZORPAY)
                     .eventType(eventType)
                     .gatewayPaymentId(gatewayPaymentId)
@@ -130,6 +147,22 @@ public class RazorpayPaymentProvider implements PaymentProvider {
             return null;
         }
         return payment.optJSONObject("entity");
+    }
+
+    private JSONObject extractRefundEntity( JSONObject payloadObject ) {
+        JSONObject refund = payloadObject.optJSONObject("refund");
+        return refund == null ? null : refund.optJSONObject("entity");
+    }
+
+    private String fallbackEventId( String payload ) throws Exception {
+        byte[] digest = MessageDigest.getInstance("SHA-256").digest(payload.getBytes(StandardCharsets.UTF_8));
+        return "payload-" + HexFormat.of().formatHex(digest);
+    }
+
+    private RefundStatus mapRefundStatus( String eventType, String gatewayStatus ) {
+        if ( "refund.processed".equals(eventType) || "processed".equalsIgnoreCase(gatewayStatus) ) return RefundStatus.REFUNDED;
+        if ( "refund.failed".equals(eventType) || "failed".equalsIgnoreCase(gatewayStatus) ) return RefundStatus.FAILED;
+        return RefundStatus.PENDING;
     }
 
 
