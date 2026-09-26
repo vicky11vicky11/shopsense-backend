@@ -14,8 +14,8 @@ public class StockReservationScheduler {
 
     private final StockReservationService reservationService;
 
-    @SchedulerLock(name = "expireStockReservations", lockAtMostFor = "50s", lockAtLeastFor = "5s")
-    @Scheduled(fixedDelay = 60_000)
+    @SchedulerLock(name = "expireStockReservations", lockAtMostFor = "30s", lockAtLeastFor = "5s")
+    @Scheduled(cron = "0 * * * * *")
     public void expireReservations() {
         log.debug("Starting expired reservation cleanup");
         reservationService.expireReservations();
