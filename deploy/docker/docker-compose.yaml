@@ -109,6 +109,34 @@ services:
             interval: 5s
             timeout: 5s
             retries: 50
+    rabbitmq:
+        container_name: rabbitmq
+        image: rabbitmq:4.3.6-management
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        environment:
+            RABBITMQ_DEFAULT_USER: root
+            RABBITMQ_DEFAULT_PASS: root
+            RABBITMQ_DEFAULT_VHOST: /shopsense
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/rabbitmq:/var/lib/rabbitmq:z
+        networks:
+            - dev_network
+        healthcheck:
+            test:
+              [
+                  "CMD",
+                  "rabbitmq-diagnostics",
+                  "-q",
+                  "ping"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 20s
     prometheus:
         container_name: prometheus
         image: prom/prometheus:v3.13.3
