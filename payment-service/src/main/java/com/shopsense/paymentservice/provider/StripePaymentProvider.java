@@ -4,8 +4,8 @@ import com.shopsense.paymentservice.config.StripeProperties;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
 import com.shopsense.paymentservice.enums.RefundStatus;
-import com.shopsense.paymentservice.exceptions.GatewayException;
-import com.shopsense.paymentservice.exceptions.WebhookVerificationException;
+import com.shopsense.paymentservice.exception.GatewayException;
+import com.shopsense.paymentservice.exception.WebhookVerificationException;
 import com.shopsense.paymentservice.request.CreateGatewayPaymentRequest;
 import com.shopsense.paymentservice.request.GatewayRefundRequest;
 import com.shopsense.paymentservice.request.PaymentWebhookEvent;
@@ -49,7 +49,7 @@ public class StripePaymentProvider implements PaymentProvider {
                     .setDescription(request.getDescription())
                     .putMetadata("order_id", request.getOrderId()
                             .toString())
-                    .putMetadata("user_id", request.getUserId())
+                    .putMetadata("user_id", request.getUserId().toString())
                     .setAutomaticPaymentMethods(PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
                             .setEnabled(true)
                             .build())

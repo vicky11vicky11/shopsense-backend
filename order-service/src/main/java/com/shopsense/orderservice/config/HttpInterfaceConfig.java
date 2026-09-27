@@ -26,6 +26,11 @@ public class HttpInterfaceConfig {
     }
 
     @Bean
+    public CustomerServiceClient customerServiceClient( WebClient.Builder webClientBuilder ) {
+        return createClient(webClientBuilder, "http://user-service", CustomerServiceClient.class);
+    }
+
+    @Bean
     public MediaServiceClient mediaServiceClient( WebClient.Builder webClientBuilder ) {
         return createClient(webClientBuilder, "http://media-service", MediaServiceClient.class);
     }

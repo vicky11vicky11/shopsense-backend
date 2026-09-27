@@ -1,7 +1,7 @@
 package com.shopsense.paymentservice.provider;
 
 import com.shopsense.paymentservice.enums.PaymentGateway;
-import com.shopsense.paymentservice.exceptions.PaymentException;
+import com.shopsense.paymentservice.exception.PaymentException;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;

@@ -8,7 +8,7 @@ import com.shopsense.paymentservice.config.RazorpayProperties;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
 import com.shopsense.paymentservice.enums.RefundStatus;
-import com.shopsense.paymentservice.exceptions.WebhookVerificationException;
+import com.shopsense.paymentservice.exception.WebhookVerificationException;
 import com.shopsense.paymentservice.request.CreateGatewayPaymentRequest;
 import com.shopsense.paymentservice.request.GatewayRefundRequest;
 import com.shopsense.paymentservice.request.PaymentWebhookEvent;

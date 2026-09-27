@@ -20,7 +20,7 @@ public class PaymentResponse {
 
     private UUID orderId;
 
-    private String userId;
+    private UUID userId;
 
     private PaymentGateway paymentGateway;
 

@@ -1,4 +1,4 @@
-package com.shopsense.paymentservice.exceptions;
+package com.shopsense.paymentservice.exception;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;

@@ -1,4 +1,4 @@
-package com.shopsense.paymentservice.utils;
+package com.shopsense.paymentservice.util;
 
 public class AppUrl {
 
@@ -12,4 +12,6 @@ public class AppUrl {
 
     //    Endpoints for Http Clients
     public static final String ORDER_URL = BASE_URL + "/orders";
+
+    public static final String CUSTOMER_URL = BASE_URL + "/customers";
 }

@@ -13,7 +13,7 @@ public class CreateGatewayPaymentRequest {
 
     private UUID orderId;
 
-    private String userId;
+    private UUID userId;
 
     private BigDecimal amount;
 

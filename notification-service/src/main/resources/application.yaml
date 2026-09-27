@@ -1,0 +1,97 @@
+info:
+    app:
+        name: ${spring.application.name}
+        description: Notification Service to perform operations related to sending notifications
+        version: 1.0.0
+server:
+    port: 8087
+    shutdown: graceful
+spring:
+    application:
+        name: notification-service
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 20MB
+    jackson:
+        deserialization:
+            fail-on-unknown-properties: true
+    lifecycle:
+        timeout-per-shutdown-phase: 30s
+    datasource:
+        url: ${MYSQL_URL}/${NOTIFICATION_SERVICE_DATABASE}?createDatabaseIfNotExist=true
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update
+        open-in-view: false
+    rabbitmq:
+        host: ${RABBITMQ_HOST}
+        port: ${RABBITMQ_PORT}
+        username: ${RABBITMQ_USERNAME}
+        password: ${RABBITMQ_PASSWORD}
+        virtual-host: ${RABBITMQ_VHOST}
+        connection-timeout: 5000ms
+    mail:
+        host: ${MAIL_HOST}
+        port: ${MAIL_PORT}
+        username: ${MAIL_USERNAME}
+        password: ${MAIL_PASSWORD}
+        from: ${MAIL_FROM}
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info,metrics,env,prometheus
+    endpoint:
+        health:
+            show-details: always
+    info:
+        env:
+            enabled: true
+    tracing:
+        sampling:
+            probability: 1.0
+    otlp:
+        metrics:
+            export:
+                enabled: false
+    opentelemetry:
+        resource-attributes:
+            service.name: ${spring.application.name}
+        tracing:
+            export:
+                otlp:
+                    endpoint: ${TEMPO_URL}
+    prometheus:
+        metrics:
+            export:
+                enabled: true
+logging:
+    file:
+        name: ./deploy/logs/${spring.application.name}.log
+    pattern:
+        correlation: "[%X{traceId:-},%X{spanId:-}]"
+    level:
+        root: info
+        com.shopsense: trace
+eureka:
+    instance:
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${server.port}
+        lease-renewal-interval-in-seconds: 30
+        lease-expiration-duration-in-seconds: 90
+    client:
+        service-url:
+            defaultZone: ${EUREKA_URL}
+        register-with-eureka: true
+        fetch-registry: true

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,16 +19,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "users")
-public class User extends BaseMongoEntity{
+@CompoundIndex(name = "uk_user_email_non_deleted", def = "{'email': 1}", unique = true, partialFilter = "{'status': {'$in': ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BLOCKED']}}")
+@CompoundIndex(name = "uk_user_phone_non_deleted", def = "{'phone': 1}", unique = true, partialFilter = "{'status': {'$in': ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BLOCKED']}}")
+public class User extends BaseMongoEntity {
 
     private String firstName;
 
     private String lastName;
 
-    @Indexed(unique = true)
     private String email;
 
-    @Indexed(unique = true)
     private String phone;
 
     @Indexed

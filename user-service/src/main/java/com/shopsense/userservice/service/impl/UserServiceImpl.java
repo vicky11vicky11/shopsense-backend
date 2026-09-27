@@ -3,10 +3,13 @@ package com.shopsense.userservice.service.impl;
 import com.shopsense.userservice.client.MediaServiceClient;
 import com.shopsense.userservice.entity.User;
 import com.shopsense.userservice.enums.MediaType;
+import com.shopsense.userservice.enums.NotificationEventType;
 import com.shopsense.userservice.enums.UserRole;
 import com.shopsense.userservice.enums.UserStatus;
+import com.shopsense.userservice.event.NotificationEvent;
 import com.shopsense.userservice.exception.ResourceNotFoundException;
 import com.shopsense.userservice.mapper.UserMapper;
+import com.shopsense.userservice.producer.NotificationEventProducer;
 import com.shopsense.userservice.repository.UserRepository;
 import com.shopsense.userservice.request.UserRequest;
 import com.shopsense.userservice.response.PageResponse;
@@ -31,6 +34,8 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     private final MediaServiceClient mediaServiceClient;
+
+    private final NotificationEventProducer notificationEventProducer;
 
     @Override
     @Transactional
@@ -122,6 +127,7 @@ public class UserServiceImpl implements UserService {
             user.setProfileImageId(userRequest.getProfileImageId());
         }
         User savedUser = userRepository.save(user);
+        publishMailEvent(NotificationEventType.USER_UPDATED, user.getEmail(), "Your ShopSense account has been updated successfully.");
         log.info("Updated user with id {}", userId);
         return userMapper.toResponse(savedUser);
     }
@@ -136,6 +142,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setStatus(UserStatus.DELETED);
         userRepository.save(user);
+        publishMailEvent(NotificationEventType.USER_DELETED, user.getEmail(), "Your ShopSense account has been deleted successfully.");
         log.info("Deleted user with id {}", userId);
     }
 
@@ -153,6 +160,7 @@ public class UserServiceImpl implements UserService {
         user.setStatus(UserStatus.ACTIVE);
         user.setProfileImageId(userRequest.getProfileImageId());
         User savedUser = userRepository.save(user);
+        publishMailEvent(NotificationEventType.USER_REGISTERED, user.getEmail(), "Your ShopSense account has been created successfully.");
         log.info("Created user with id {} and role {}", savedUser.getId(), savedUser.getRole());
         return userMapper.toResponse(savedUser);
     }
@@ -171,5 +179,15 @@ public class UserServiceImpl implements UserService {
         boolean exists = userRepository.existsByIdAndRoleAndStatus(userId, userRole, UserStatus.ACTIVE);
         log.info("User {} with role {} exists {}", userId, userRole, exists);
         return exists;
+    }
+
+    private void publishMailEvent( NotificationEventType notificationEventType, String userEmail, String content ) {
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .eventId(UUID.randomUUID())
+                .eventType(notificationEventType)
+                .recipient(userEmail)
+                .content(content)
+                .build();
+        notificationEventProducer.publishMailNotification(notificationEvent);
     }
 }

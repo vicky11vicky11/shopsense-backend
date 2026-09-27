@@ -1,18 +1,19 @@
 package com.shopsense.orderservice.service.impl;
 
-import com.shopsense.orderservice.client.AddressServiceClient;
-import com.shopsense.orderservice.client.MediaServiceClient;
-import com.shopsense.orderservice.client.ProductServiceClient;
-import com.shopsense.orderservice.client.StockReservationServiceClient;
+import com.shopsense.orderservice.client.*;
 import com.shopsense.orderservice.entity.Order;
 import com.shopsense.orderservice.entity.OrderIdempotency;
 import com.shopsense.orderservice.entity.OrderItem;
 import com.shopsense.orderservice.entity.OrderStatusHistory;
+import com.shopsense.orderservice.enums.NotificationEventType;
 import com.shopsense.orderservice.enums.OrderStatus;
+import com.shopsense.orderservice.enums.RefundStatus;
 import com.shopsense.orderservice.enums.ReservationStatus;
+import com.shopsense.orderservice.event.NotificationEvent;
 import com.shopsense.orderservice.exception.BadRequestException;
 import com.shopsense.orderservice.exception.ResourceNotFoundException;
 import com.shopsense.orderservice.mapper.OrderMapper;
+import com.shopsense.orderservice.producer.NotificationEventProducer;
 import com.shopsense.orderservice.repository.OrderIdempotencyRepository;
 import com.shopsense.orderservice.repository.OrderRepository;
 import com.shopsense.orderservice.repository.OrderStatusHistoryRepository;
@@ -44,6 +45,7 @@ import java.util.UUID;
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
+    private final CustomerServiceClient customerServiceClient;
     @Value("${order.tax-rate}")
     private BigDecimal taxRate;
 
@@ -68,7 +70,9 @@ public class OrderServiceImpl implements OrderService {
 
     private final StockReservationServiceClient stockReservationServiceClient;
 
-    private final com.shopsense.orderservice.client.PaymentServiceClient paymentServiceClient;
+    private final PaymentServiceClient paymentServiceClient;
+
+    private final NotificationEventProducer notificationEventProducer;
 
     @Override
     @Transactional
@@ -243,6 +247,8 @@ public class OrderServiceImpl implements OrderService {
         // so a retried gateway webhook can safely repeat this transition.
         if ( newStatus == OrderStatus.CONFIRMED ) {
             stockReservationServiceClient.consumeByOrderId(orderId);
+            UserResponse userResponse = customerServiceClient.getUserById(order.getUserId());
+            publishMailEvent(NotificationEventType.ORDER_PLACED, userResponse.getEmail(), "Order placed successfully for orderId=" + orderId);
         }
         order.setStatus(newStatus);
         Order savedOrder = orderRepository.saveAndFlush(order);
@@ -263,6 +269,8 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.saveAndFlush(order);
         saveStatusHistory(savedOrder, previousStatus, OrderStatus.CANCELLED, "Order Cancelled", "Order cancelled because inventory reservation expired.");
+        UserResponse userResponse = customerServiceClient.getUserById(order.getUserId());
+        publishMailEvent(NotificationEventType.ORDER_CANCELLED, userResponse.getEmail(), "Order cancelled because inventory reservation expired.");
         log.info("Order cancelled successfully: orderId={}, orderNumber={}, userId={}, previousStatus={}, status={}", orderId, savedOrder.getOrderNumber(), order.getUserId(), previousStatus, savedOrder.getStatus());
     }
 
@@ -291,12 +299,14 @@ public class OrderServiceImpl implements OrderService {
         if ( paidOrder ) {
             completeRefundIfReady(savedOrder, userId);
         }
+        UserResponse userResponse = customerServiceClient.getUserById(order.getUserId());
+        publishMailEvent(NotificationEventType.ORDER_CANCELLED, userResponse.getEmail(), "Order cancelled by you.");
         log.info("Order cancelled successfully: orderId={}, orderNumber={}, userId={}, previousStatus={}, status={}", orderId, savedOrder.getOrderNumber(), userId, previousStatus, savedOrder.getStatus());
     }
 
     private void completeRefundIfReady( Order order, UUID userId ) {
-        com.shopsense.orderservice.response.PaymentRefundResponse refund = paymentServiceClient.refundOrder(userId.toString(), order.getId());
-        if ( refund != null && "REFUNDED".equalsIgnoreCase(refund.getStatus()) && order.getStatus() == OrderStatus.REFUND_PENDING ) {
+        PaymentRefundResponse refund = paymentServiceClient.refundOrder(userId.toString(), order.getId());
+        if ( refund != null && RefundStatus.REFUNDED == refund.getStatus() && order.getStatus() == OrderStatus.REFUND_PENDING ) {
             order.setStatus(OrderStatus.REFUNDED);
             Order savedOrder = orderRepository.saveAndFlush(order);
             saveStatusHistory(savedOrder, OrderStatus.REFUND_PENDING, OrderStatus.REFUNDED, "Refund completed", "Payment refund completed successfully");
@@ -406,5 +416,15 @@ public class OrderServiceImpl implements OrderService {
                 .description(description)
                 .build();
         orderStatusHistoryRepository.save(history);
+    }
+
+    private void publishMailEvent( NotificationEventType notificationEventType, String userEmail, String content ) {
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .eventId(UUID.randomUUID())
+                .eventType(notificationEventType)
+                .recipient(userEmail)
+                .content(content)
+                .build();
+        notificationEventProducer.publishMailNotification(notificationEvent);
     }
 }

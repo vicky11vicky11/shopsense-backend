@@ -1,4 +1,4 @@
-package com.shopsense.paymentservice.exceptions;
+package com.shopsense.paymentservice.exception;
 
 import org.springframework.http.HttpStatus;
 

@@ -30,6 +30,13 @@ spring:
     data:
         mongodb:
             auto-index-creation: true
+    rabbitmq:
+        host: ${RABBITMQ_HOST}
+        port: ${RABBITMQ_PORT}
+        username: ${RABBITMQ_USERNAME}
+        password: ${RABBITMQ_PASSWORD}
+        virtual-host: ${RABBITMQ_VHOST}
+        connection-timeout: 5000ms
 management:
     endpoints:
         web:

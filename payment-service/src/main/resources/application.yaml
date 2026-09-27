@@ -27,6 +27,13 @@ spring:
         hibernate:
             ddl-auto: update
         open-in-view: false
+    rabbitmq:
+        host: ${RABBITMQ_HOST}
+        port: ${RABBITMQ_PORT}
+        username: ${RABBITMQ_USERNAME}
+        password: ${RABBITMQ_PASSWORD}
+        virtual-host: ${RABBITMQ_VHOST}
+        connection-timeout: 5000ms
 management:
     endpoints:
         web:

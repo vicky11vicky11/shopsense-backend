@@ -1,4 +1,4 @@
-package com.shopsense.paymentservice.exceptions;
+package com.shopsense.paymentservice.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException( String message ) {

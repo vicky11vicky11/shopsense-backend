@@ -1,5 +1,6 @@
 package com.shopsense.paymentservice.config;
 
+import com.shopsense.paymentservice.client.CustomerServiceClient;
 import com.shopsense.paymentservice.client.OrderServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
@@ -25,6 +26,18 @@ public class HttpInterfaceConfig {
         HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter)
                 .build();
         return factory.createClient(OrderServiceClient.class);
+    }
+
+    @Bean
+    public CustomerServiceClient customerServiceClient( WebClient.Builder webClientBuilder ) {
+        WebClient webClient = webClientBuilder.clone()
+                .baseUrl("http://user-service")
+                .filter(loadBalancerFilter)
+                .build();
+        WebClientAdapter adapter = WebClientAdapter.create(webClient);
+        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(adapter)
+                .build();
+        return factory.createClient(CustomerServiceClient.class);
     }
 
 }

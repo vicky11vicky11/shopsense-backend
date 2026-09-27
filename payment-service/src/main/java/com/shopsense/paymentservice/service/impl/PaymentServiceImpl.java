@@ -1,28 +1,26 @@
 package com.shopsense.paymentservice.service.impl;
 
+import com.shopsense.paymentservice.client.CustomerServiceClient;
 import com.shopsense.paymentservice.client.OrderServiceClient;
 import com.shopsense.paymentservice.entity.Payment;
 import com.shopsense.paymentservice.entity.ProcessedWebhookEvent;
 import com.shopsense.paymentservice.entity.Refund;
-import com.shopsense.paymentservice.enums.OrderStatus;
-import com.shopsense.paymentservice.enums.PaymentGateway;
-import com.shopsense.paymentservice.enums.PaymentStatus;
-import com.shopsense.paymentservice.enums.RefundStatus;
-import com.shopsense.paymentservice.exceptions.PaymentException;
+import com.shopsense.paymentservice.enums.*;
+import com.shopsense.paymentservice.event.NotificationEvent;
+import com.shopsense.paymentservice.exception.PaymentException;
+import com.shopsense.paymentservice.producer.NotificationEventProducer;
 import com.shopsense.paymentservice.provider.PaymentProvider;
 import com.shopsense.paymentservice.provider.PaymentProviderFactory;
 import com.shopsense.paymentservice.repository.PaymentRepository;
 import com.shopsense.paymentservice.repository.ProcessedWebhookEventRepository;
 import com.shopsense.paymentservice.repository.RefundRepository;
 import com.shopsense.paymentservice.request.*;
-import com.shopsense.paymentservice.response.GatewayPaymentResponse;
-import com.shopsense.paymentservice.response.GatewayRefundResponse;
-import com.shopsense.paymentservice.response.PaymentResponse;
-import com.shopsense.paymentservice.response.ProductOrderResponse;
-import com.shopsense.paymentservice.response.RefundResponse;
+import com.shopsense.paymentservice.response.*;
 import com.shopsense.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
@@ -38,17 +36,27 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+
     private final PaymentRepository paymentRepository;
+
     private final RefundRepository refundRepository;
+
     private final ProcessedWebhookEventRepository processedWebhookEventRepository;
+
     private final OrderServiceClient orderServiceClient;
+
     private final PaymentProviderFactory paymentProviderFactory;
+
+    private final NotificationEventProducer notificationEventProducer;
+
+    private final CustomerServiceClient customerServiceClient;
+
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
     @Transactional
-    public PaymentResponse createPayment( String userId, CreatePaymentRequest request ) {
+    public PaymentResponse createPayment( UUID userId, CreatePaymentRequest request ) {
         log.info("CREATE PAYMENT | userId={} | orderId={} | gateway={}", userId, request.getOrderId(), request.getPaymentGateway());
         ProductOrderResponse order = orderServiceClient.getOrderById(userId, request.getOrderId());
         log.debug("ORDER FETCHED FOR PAYMENT | orderId={} | status={} | amount={} | currency={}", request.getOrderId(), order != null ? order.getStatus() : null, order != null ? order.getTotalAmount() : null, order != null ? order.getCurrency() : null);
@@ -93,7 +101,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(noRollbackFor = PaymentException.class)
-    public PaymentResponse verifyRazorpayPayment( String userId, UUID paymentId, String gatewayOrderId, String gatewayPaymentId, String signature ) {
+    public PaymentResponse verifyRazorpayPayment( UUID userId, UUID paymentId, String gatewayOrderId, String gatewayPaymentId, String signature ) {
         log.info("VERIFY RAZORPAY PAYMENT | userId={} | paymentId={} | gatewayOrderId={} | gatewayPaymentId={}", userId, paymentId, gatewayOrderId, gatewayPaymentId);
         Payment payment = getOwnedPayment(userId, paymentId);
         if ( payment.getPaymentGateway() != PaymentGateway.RAZORPAY ) {
@@ -131,7 +139,14 @@ public class PaymentServiceImpl implements PaymentService {
         return toResponse(payment);
     }
 
-    private void updateOrderStatus( String userId, Payment payment, OrderStatus status, String reason, String description ) {
+    @Override
+    public PageResponse<PaymentResponse> getAllPayments( Pageable pageable ) {
+        Page<Payment> payments = paymentRepository.findAll(pageable);
+        log.info("Fetch {} payment records", payments.getTotalElements());
+        return PageResponse.from(payments,this::toResponse);
+    }
+
+    private void updateOrderStatus( UUID userId, Payment payment, OrderStatus status, String reason, String description ) {
         log.info("UPDATING ORDER STATUS | orderId={} | paymentId={} | newStatus={} | reason={}", payment.getOrderId(), payment.getId(), status, reason);
         ProductOrderResponse productOrderResponse = orderServiceClient.updateOrderStatus(userId, payment.getOrderId(), UpdateOrderStatusRequest.builder()
                 .status(status)
@@ -143,14 +158,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaymentResponse getPayment( String userId, UUID paymentId ) {
+    public PaymentResponse getPayment( UUID userId, UUID paymentId ) {
         log.debug("GET PAYMENT | userId={} | paymentId={}", userId, paymentId);
         return toResponse(getOwnedPayment(userId, paymentId));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaymentResponse getPaymentByOrderId( String userId, UUID orderId ) {
+    public PaymentResponse getPaymentByOrderId( UUID userId, UUID orderId ) {
         log.debug("GET PAYMENT BY ORDER | userId={} | orderId={}", userId, orderId);
         Payment payment = paymentRepository.findFirstByOrderIdOrderByCreatedAtDesc(orderId)
                 .orElseThrow(() -> new PaymentException("Payment not found"));
@@ -164,7 +179,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(noRollbackFor = RuntimeException.class)
-    public RefundResponse refundPayment( String userId, UUID paymentId, BigDecimal amount, String reason ) {
+    public RefundResponse refundPayment( UUID userId, UUID paymentId, BigDecimal amount, String reason ) {
         log.info("REFUND PAYMENT | userId={} | paymentId={} | amount={} | reason={}", userId, paymentId, amount, reason);
         Payment payment = paymentRepository.lockById(paymentId)
                 .orElseThrow(() -> new PaymentException("Payment not found"));
@@ -212,6 +227,8 @@ public class PaymentServiceImpl implements PaymentService {
                 if ( payment.getRefundedAmount()
                         .compareTo(payment.getAmount()) >= 0 ) {
                     payment.setStatus(PaymentStatus.REFUNDED);
+                    UserResponse userResponse = getUserById(payment.getUserId());
+                    publishMailEvent(NotificationEventType.REFUND_SUCCESS, userResponse.getEmail(), "Refund amount paid for order id " + payment.getOrderId());
                 } else {
                     payment.setStatus(PaymentStatus.PARTIALLY_REFUNDED);
                 }
@@ -232,15 +249,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public RefundResponse refundOrder( String userId, UUID orderId ) {
+    public RefundResponse refundOrder( UUID userId, UUID orderId ) {
         log.info("REFUND ORDER | userId={} | orderId={}", userId, orderId);
-        List<Payment> capturedPayments = paymentRepository.findByUserId(userId)
-                .stream()
-                .filter(candidate -> candidate.getOrderId()
-                        .equals(orderId))
-                .filter(candidate -> candidate.getStatus() == PaymentStatus.SUCCESS || candidate.getStatus() == PaymentStatus.PARTIALLY_REFUNDED || candidate.getStatus() == PaymentStatus.REFUNDED)
-                .sorted(Comparator.comparing(Payment::getCreatedAt))
-                .toList();
+        List<Payment> capturedPaymentsList = paymentRepository.findByUserIdAndOrderId(userId,orderId);
+        List<Payment> capturedPayments =
+                capturedPaymentsList.stream()
+                        .filter(candidate -> candidate.getOrderId()
+                                .equals(orderId))
+                        .filter(candidate -> candidate.getStatus() == PaymentStatus.SUCCESS || candidate.getStatus() == PaymentStatus.PARTIALLY_REFUNDED || candidate.getStatus() == PaymentStatus.REFUNDED)
+                        .sorted(Comparator.comparing(Payment::getCreatedAt))
+                        .toList();
         log.info("CAPTURED PAYMENTS FOUND FOR ORDER | orderId={} | count={}", orderId, capturedPayments.size());
         if ( capturedPayments.isEmpty() ) {
             log.warn("NO SUCCESSFUL PAYMENT FOUND FOR REFUND | orderId={} | userId={}", orderId, userId);
@@ -337,7 +355,7 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("WEBHOOK PROCESSING COMPLETED | gateway={} | eventId={} | eventType={}", gateway, event.getEventId(), event.getEventType());
     }
 
-    private Payment getOwnedPayment( String userId, UUID paymentId ) {
+    private Payment getOwnedPayment( UUID userId, UUID paymentId ) {
         log.debug("FETCHING PAYMENT | userId={} | paymentId={}", userId, paymentId);
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentException("Payment not found"));
@@ -467,6 +485,8 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("UPDATING ORDER TO CONFIRMED | orderId={}", payment.getOrderId());
         updateOrderStatus(payment.getUserId(), payment, OrderStatus.CONFIRMED, "Payment successful", "Payment successfully confirmed by payment gateway");
         log.info("ORDER CONFIRMED AFTER PAYMENT | orderId={} | paymentId={}", payment.getOrderId(), payment.getId());
+        UserResponse userResponse = getUserById(payment.getUserId());
+        publishMailEvent(NotificationEventType.PAYMENT_PAID, userResponse.getEmail(), "Payment amount paid for order id " + payment.getOrderId());
     }
 
     private void handleFailedPayment( Payment payment, PaymentWebhookEvent event ) {
@@ -480,6 +500,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setFailureReason(failureReason);
         paymentRepository.save(payment);
         log.warn("PAYMENT MARKED FAILED | paymentId={} | orderId={}", payment.getId(), payment.getOrderId());
+        UserResponse userResponse = getUserById(payment.getUserId());
+        publishMailEvent(NotificationEventType.PAYMENT_FAILED, userResponse.getEmail(), "Payment failed for order id " + payment.getOrderId());
     }
 
     private void saveProcessedWebhookEvent( PaymentWebhookEvent event ) {
@@ -519,5 +541,19 @@ public class PaymentServiceImpl implements PaymentService {
                 updateOrderStatus(payment.getUserId(), payment, OrderStatus.REFUNDED, "Refund completed", "Order payment was refunded successfully");
             }
         }
+    }
+
+    private UserResponse getUserById( UUID customerId ) {
+        return customerServiceClient.getUserById(customerId);
+    }
+
+    private void publishMailEvent( NotificationEventType notificationEventType, String userEmail, String content ) {
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .eventId(UUID.randomUUID())
+                .eventType(notificationEventType)
+                .recipient(userEmail)
+                .content(content)
+                .build();
+        notificationEventProducer.publishMailNotification(notificationEvent);
     }
 }

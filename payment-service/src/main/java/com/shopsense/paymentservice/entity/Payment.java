@@ -29,8 +29,8 @@ public class Payment {
     @Column(name = "order_id", nullable = false)
     private UUID orderId;
 
-    @Column(name = "user_id", nullable = false, length = 100)
-    private String userId;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_gateway", nullable = false, length = 20)
