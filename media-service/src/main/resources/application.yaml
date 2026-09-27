@@ -37,6 +37,8 @@ management:
                 include: health,info,metrics,env,prometheus
     endpoint:
         health:
+            probes:
+                enabled: true
             show-details: always
     info:
         env:

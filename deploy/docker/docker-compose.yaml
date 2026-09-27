@@ -1,4 +1,11 @@
+name: shop-sense
+
 services:
+
+    # ============================================================
+    # INFRASTRUCTURE
+    # ============================================================
+
     mongodb:
         container_name: mongodb
         image: mongo:8.3.8
@@ -6,25 +13,28 @@ services:
         tty: true
         ports:
             - "27017:27017"
+        env_file:
+            - ../.env.docker
         environment:
-            MONGO_INITDB_ROOT_USERNAME: root
-            MONGO_INITDB_ROOT_PASSWORD: root
-            MONGO_INITDB_DATABASE: user_service
+            MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+            MONGO_INITDB_DATABASE: ${USER_SERVICE_DATABASE}
             GLIBC_TUNABLES: "glibc.pthread.rseq=1"
         volumes:
             - /home/vicky/Projects/ShopSense/data/mongodb:/data/db:z
         networks:
-            - dev_network
+            - infra_network
         healthcheck:
             test:
               [
                   "CMD-SHELL",
-                  "mongosh --username root --password root --authenticationDatabase admin --eval 'db.adminCommand({ ping: 1 })' || exit 1"
+                  "mongosh --username ${MONGODB_USERNAME} --password ${MONGODB_PASSWORD} --authenticationDatabase admin --eval 'db.adminCommand({ ping: 1 })' || exit 1"
               ]
             interval: 10s
             timeout: 5s
             retries: 5
             start_period: 15s
+
     mysql-cleanup:
         image: busybox:latest
         container_name: mysql-cleanup
@@ -36,6 +46,9 @@ services:
         volumes:
             - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
         restart: "no"
+        networks:
+            - infra_network
+
     mysql:
         container_name: mysql
         image: mysql:8.4
@@ -47,23 +60,25 @@ services:
         ports:
             - "3306:3306"
         environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: product_service
+            MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_DATABASE: catalog_service
             GLIBC_TUNABLES: "glibc.pthread.rseq=1"
         volumes:
             - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
+            - /home/vicky/Projects/ShopSense/server/deploy/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
         networks:
-            - dev_network
+            - infra_network
         healthcheck:
             test:
               [
                   "CMD-SHELL",
-                  "mysqladmin ping -h 127.0.0.1 -u root -proot --silent || exit 1"
+                  "mysqladmin ping -h 127.0.0.1 -u root -p${MYSQL_PASSWORD} --silent || exit 1"
               ]
             interval: 5s
             timeout: 5s
             retries: 50
             start_period: 20s
+
     postgres:
         container_name: postgres
         image: postgres:18
@@ -72,21 +87,26 @@ services:
         ports:
             - "5432:5432"
         environment:
-            POSTGRES_USER: root
-            POSTGRES_PASSWORD: root
+            POSTGRES_USER: ${POSTGRES_USERNAME}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
             POSTGRES_DB: order_service
         volumes:
             - /home/vicky/Projects/ShopSense/data/postgres:/var/lib/postgresql:z
         networks:
-            - dev_network
+            - infra_network
         healthcheck:
-            test: [ "CMD-SHELL", "pg_isready -U root -d order_service" ]
+            test:
+              [
+                  "CMD-SHELL",
+                  "pg_isready -U ${POSTGRES_USERNAME} -d order_service"
+              ]
             interval: 5s
             timeout: 5s
             retries: 50
+
     redis:
-        image: redis:8
         container_name: redis
+        image: redis:8
         restart: on-failure
         tty: true
         ports:
@@ -99,7 +119,7 @@ services:
             - /home/vicky/Projects/ShopSense/data/redis:/data:z
             - /home/vicky/Projects/ShopSense/data/redis/users.acl:/usr/local/etc/redis/users.acl:ro,z
         networks:
-            - dev_network
+            - infra_network
         healthcheck:
             test:
               [
@@ -109,6 +129,7 @@ services:
             interval: 5s
             timeout: 5s
             retries: 50
+
     rabbitmq:
         container_name: rabbitmq
         image: rabbitmq:4.3.6-management
@@ -118,13 +139,13 @@ services:
             - "5672:5672"
             - "15672:15672"
         environment:
-            RABBITMQ_DEFAULT_USER: root
-            RABBITMQ_DEFAULT_PASS: root
-            RABBITMQ_DEFAULT_VHOST: /shopsense
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+            RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
         volumes:
             - /home/vicky/Projects/ShopSense/data/rabbitmq:/var/lib/rabbitmq:z
         networks:
-            - dev_network
+            - infra_network
         healthcheck:
             test:
               [
@@ -137,6 +158,12 @@ services:
             timeout: 5s
             retries: 10
             start_period: 20s
+
+
+    # ============================================================
+    # OBSERVABILITY
+    # ============================================================
+
     prometheus:
         container_name: prometheus
         image: prom/prometheus:v3.13.3
@@ -151,10 +178,10 @@ services:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
             - "--storage.tsdb.retention.time=15d"
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
         networks:
             - dev_network
+            - track_network
+
     loki:
         container_name: loki
         image: grafana/loki:3.7.8
@@ -168,7 +195,8 @@ services:
         command:
             - "-config.file=/etc/loki/loki-config.yml"
         networks:
-            - dev_network
+            - track_network
+
     tempo:
         container_name: tempo
         image: grafana/tempo:3.0.3
@@ -185,6 +213,8 @@ services:
             - "-config.file=/etc/tempo/tempo.yml"
         networks:
             - dev_network
+            - track_network
+
     grafana:
         container_name: grafana
         image: grafana/grafana:13.2
@@ -200,7 +230,8 @@ services:
             - loki
             - tempo
         networks:
-            - dev_network
+            - track_network
+
     alloy:
         container_name: alloy
         image: grafana/alloy:v1.19.0
@@ -212,6 +243,7 @@ services:
             - /home/vicky/Projects/ShopSense/server/deploy/observability/alloy/config.alloy:/etc/alloy/config.alloy:ro,z
             - /home/vicky/Projects/ShopSense/server/deploy/logs:/shopsense:ro,z
             - /home/vicky/Projects/ShopSense/data/alloy:/var/lib/alloy:z
+            - /var/run/docker.sock:/var/run/docker.sock:ro
         command:
             - "run"
             - "/etc/alloy/config.alloy"
@@ -219,7 +251,305 @@ services:
         depends_on:
             - loki
         networks:
+            - track_network
+
+
+    # ============================================================
+    # EUREKA
+    # ============================================================
+
+    eureka-service:
+        container_name: eureka-service
+        build:
+            context: ../../eureka-service
+            dockerfile: Dockerfile
+        image: shopsense/eureka-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        ports:
+            - "8761:8761"
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8761/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
             - dev_network
+
+
+    # ============================================================
+    # APPLICATION SERVICES
+    # ============================================================
+
+    gateway-service:
+        container_name: gateway-service
+        build:
+            context: ../../gateway-service
+            dockerfile: Dockerfile
+        image: shopsense/gateway-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        ports:
+            - "8080:8080"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8080/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    user-service:
+        container_name: user-service
+        build:
+            context: ../../user-service
+            dockerfile: Dockerfile
+        image: shopsense/user-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8081"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mongodb:
+                condition: service_healthy
+            rabbitmq:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8081/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    catalog-service:
+        container_name: catalog-service
+        build:
+            context: ../../catalog-service
+            dockerfile: Dockerfile
+        image: shopsense/catalog-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8082"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8082/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    inventory-service:
+        container_name: inventory-service
+        build:
+            context: ../../inventory-service
+            dockerfile: Dockerfile
+        image: shopsense/inventory-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8083"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8083/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    media-service:
+        container_name: media-service
+        build:
+            context: ../../media-service
+            dockerfile: Dockerfile
+        image: shopsense/media-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8084"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8084/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    order-service:
+        container_name: order-service
+        build:
+            context: ../../order-service
+            dockerfile: Dockerfile
+        image: shopsense/order-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8085"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mysql:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8085/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    payment-service:
+        container_name: payment-service
+        build:
+            context: ../../payment-service
+            dockerfile: Dockerfile
+        image: shopsense/payment-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8086"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8086/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+    notification-service:
+        container_name: notification-service
+        build:
+            context: ../../notification-service
+            dockerfile: Dockerfile
+        image: shopsense/notification-service:latest
+        restart: unless-stopped
+        env_file:
+            - ../.env.docker
+        expose:
+            - "8087"
+        depends_on:
+            eureka-service:
+                condition: service_healthy
+            mysql:
+                condition: service_healthy
+            rabbitmq:
+                condition: service_healthy
+        healthcheck:
+            test:
+              [
+                  "CMD-SHELL",
+                  "curl -fsS http://localhost:8087/actuator/health/readiness || exit 1"
+              ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 30s
+        networks:
+            - dev_network
+            - infra_network
+
+
+# ================================================================
+# NETWORKS
+# ================================================================
+
 networks:
+
     dev_network:
+        name: shop-sense-dev
+        driver: bridge
+
+    infra_network:
+        name: shop-sense-infra
+        driver: bridge
+
+    track_network:
+        name: shop-sense-track
         driver: bridge

@@ -109,6 +109,8 @@
     </dependencyManagement>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
+
         <plugins>
 
             <plugin>

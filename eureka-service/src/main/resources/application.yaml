@@ -18,6 +18,8 @@ management:
                 include: health,info,env,metrics
     endpoint:
         health:
+            probes:
+                enabled: true
             show-details: always
     info:
         env:
