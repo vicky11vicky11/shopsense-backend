@@ -1,34 +1,69 @@
 logging {
-    level  = "info"
-    format = "logfmt"
-}
-
-discovery.docker "shopsense" {
-    host = "unix:///var/run/docker.sock"
-}
-
-discovery.relabel "shopsense_logs" {
-    targets = discovery.docker.shopsense.targets
-
-    rule {
-        source_labels = ["__meta_docker_container_name"]
-        regex         = "/(.*)"
-        target_label  = "service"
-    }
-}
-
-loki.source.docker "shopsense" {
-    host          = "unix:///var/run/docker.sock"
-    targets       = discovery.docker.shopsense.targets
-    relabel_rules = discovery.relabel.shopsense_logs.rules
-    labels = {
-        environment = "docker",
-    }
-    forward_to = [loki.write.shopsense.receiver]
+  level  = "info"
+  format = "logfmt"
 }
 
 loki.write "shopsense" {
-    endpoint {
-        url = "http://loki:3100/loki/api/v1/push"
-    }
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+local.file_match "shopsense" {
+  path_targets = [
+    {
+      __path__ = "/shopsense/**/*.log",
+    },
+  ]
+}
+
+discovery.relabel "shopsense_local" {
+  targets = local.file_match.shopsense.targets
+
+  rule {
+    source_labels = ["__path__"]
+    regex         = "/shopsense/([^/]+)/.*"
+    target_label  = "service"
+  }
+
+  rule {
+    target_label = "environment"
+    replacement  = "local"
+  }
+}
+
+loki.source.file "shopsense_local" {
+  targets    = discovery.relabel.shopsense_local.output
+  forward_to = [loki.write.shopsense.receiver]
+}
+
+discovery.docker "shopsense" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "shopsense_docker" {
+  targets = discovery.docker.shopsense.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "service"
+  }
+
+  rule {
+    target_label = "environment"
+    replacement  = "docker"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+}
+
+loki.source.docker "shopsense" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.shopsense.targets
+  relabel_rules = discovery.relabel.shopsense_docker.rules
+  forward_to    = [loki.write.shopsense.receiver]
 }
