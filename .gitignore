@@ -2,3 +2,5 @@
 .env.*
 **/logs/
 *.log
+**/keys/
+*.pem
