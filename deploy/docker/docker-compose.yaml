@@ -65,7 +65,6 @@ services:
             GLIBC_TUNABLES: "glibc.pthread.rseq=1"
         volumes:
             - /home/vicky/Projects/ShopSense/data/mysql:/var/lib/mysql:z
-            - /home/vicky/Projects/ShopSense/server/deploy/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro,z
         networks:
             - infra_network
         healthcheck:
