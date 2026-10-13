@@ -2,7 +2,7 @@ package com.shopsense.catalogservice.service;
 
 import com.shopsense.catalogservice.request.CategoryRequest;
 import com.shopsense.catalogservice.response.CategoryResponse;
-import com.shopsense.catalogservice.response.PageResponse;
+import com.shopsense.commonservice.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;

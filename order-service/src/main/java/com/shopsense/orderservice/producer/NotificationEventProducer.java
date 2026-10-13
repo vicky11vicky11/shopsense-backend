@@ -1,7 +1,7 @@
 package com.shopsense.orderservice.producer;
 
-import com.shopsense.orderservice.event.NotificationEvent;
-import com.shopsense.orderservice.util.RabbitMQConstants;
+import com.shopsense.commonservice.event.NotificationEvent;
+import com.shopsense.commonservice.util.RabbitMQConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

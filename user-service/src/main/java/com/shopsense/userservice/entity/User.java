@@ -1,12 +1,11 @@
 package com.shopsense.userservice.entity;
 
-import com.shopsense.userservice.enums.UserRole;
-import com.shopsense.userservice.enums.UserStatus;
+import com.shopsense.commonservice.enums.UserRole;
+import com.shopsense.commonservice.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;

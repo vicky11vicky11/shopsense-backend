@@ -2,8 +2,9 @@ package com.shopsense.mediaservice.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.shopsense.commonservice.enums.MediaType;
+import com.shopsense.commonservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.entity.Media;
-import com.shopsense.mediaservice.enums.MediaType;
 import com.shopsense.mediaservice.exception.InvalidFileException;
 import com.shopsense.mediaservice.exception.MediaNotFoundException;
 import com.shopsense.mediaservice.exception.MediaUploadException;
@@ -11,7 +12,6 @@ import com.shopsense.mediaservice.repository.MediaRepository;
 import com.shopsense.mediaservice.request.BulkMediaUploadRequest;
 import com.shopsense.mediaservice.request.MediaRequest;
 import com.shopsense.mediaservice.request.MediaUpdateRequest;
-import com.shopsense.mediaservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.response.MediaResponse;
 import com.shopsense.mediaservice.service.MediaService;
 import lombok.RequiredArgsConstructor;

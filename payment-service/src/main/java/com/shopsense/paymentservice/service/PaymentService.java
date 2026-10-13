@@ -1,8 +1,8 @@
 package com.shopsense.paymentservice.service;
 
+import com.shopsense.commonservice.response.PageResponse;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.request.CreatePaymentRequest;
-import com.shopsense.paymentservice.response.PageResponse;
 import com.shopsense.paymentservice.response.PaymentResponse;
 import com.shopsense.paymentservice.response.RefundResponse;
 import org.springframework.data.domain.Pageable;

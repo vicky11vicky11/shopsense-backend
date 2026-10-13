@@ -1,9 +1,9 @@
 package com.shopsense.userservice.service;
 
-import com.shopsense.userservice.enums.UserRole;
+import com.shopsense.commonservice.enums.UserRole;
+import com.shopsense.commonservice.response.PageResponse;
+import com.shopsense.commonservice.response.UserResponse;
 import com.shopsense.userservice.request.UserRequest;
-import com.shopsense.userservice.response.PageResponse;
-import com.shopsense.userservice.response.UserResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;

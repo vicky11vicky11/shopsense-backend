@@ -1,6 +1,6 @@
 package com.shopsense.inventoryservice.entity;
 
-import com.shopsense.inventoryservice.enums.ReservationStatus;
+import com.shopsense.commonservice.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

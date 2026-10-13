@@ -2,7 +2,7 @@ package com.shopsense.catalogservice.mapper;
 
 import com.shopsense.catalogservice.entity.ProductInformation;
 import com.shopsense.catalogservice.request.ProductInformationRequest;
-import com.shopsense.catalogservice.response.ProductInformationResponse;
+import com.shopsense.commonservice.response.ProductInformationResponse;
 import org.mapstruct.*;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)

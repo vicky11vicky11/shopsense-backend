@@ -1,10 +1,10 @@
 package com.shopsense.orderservice.controller;
 
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.orderservice.request.AddToCartRequest;
 import com.shopsense.orderservice.request.UpdateCartItemRequest;
 import com.shopsense.orderservice.response.CartResponse;
 import com.shopsense.orderservice.service.CartService;
-import com.shopsense.orderservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

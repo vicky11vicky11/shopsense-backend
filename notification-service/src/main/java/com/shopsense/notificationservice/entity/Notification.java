@@ -1,7 +1,7 @@
 package com.shopsense.notificationservice.entity;
 
+import com.shopsense.commonservice.enums.NotificationEventType;
 import com.shopsense.notificationservice.enums.NotificationChannel;
-import com.shopsense.notificationservice.enums.NotificationEventType;
 import com.shopsense.notificationservice.enums.NotificationStatus;
 import jakarta.persistence.*;
 import lombok.*;

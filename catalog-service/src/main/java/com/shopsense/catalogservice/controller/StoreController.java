@@ -2,10 +2,10 @@ package com.shopsense.catalogservice.controller;
 
 import com.shopsense.catalogservice.request.StoreRequest;
 import com.shopsense.catalogservice.request.UpdateStoreRequest;
-import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.response.StoreResponse;
 import com.shopsense.catalogservice.service.StoreService;
-import com.shopsense.catalogservice.util.AppUrl;
+import com.shopsense.commonservice.response.PageResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

@@ -1,10 +1,10 @@
 package com.shopsense.mediaservice.service;
 
-import com.shopsense.mediaservice.enums.MediaType;
+import com.shopsense.commonservice.enums.MediaType;
+import com.shopsense.commonservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.request.BulkMediaUploadRequest;
 import com.shopsense.mediaservice.request.MediaRequest;
 import com.shopsense.mediaservice.request.MediaUpdateRequest;
-import com.shopsense.mediaservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.response.MediaResponse;
 
 import java.util.List;

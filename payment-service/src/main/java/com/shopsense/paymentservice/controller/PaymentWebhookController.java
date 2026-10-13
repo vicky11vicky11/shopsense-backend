@@ -1,8 +1,8 @@
 package com.shopsense.paymentservice.controller;
 
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.service.PaymentService;
-import com.shopsense.paymentservice.util.AppUrl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

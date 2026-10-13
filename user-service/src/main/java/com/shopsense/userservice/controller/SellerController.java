@@ -1,11 +1,10 @@
 package com.shopsense.userservice.controller;
 
+import com.shopsense.commonservice.response.UserResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.userservice.request.UserRequest;
-import com.shopsense.userservice.response.UserResponse;
 import com.shopsense.userservice.service.UserService;
-import com.shopsense.userservice.util.AppUrl;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

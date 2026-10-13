@@ -1,8 +1,8 @@
 package com.shopsense.catalogservice.service;
 
 import com.shopsense.catalogservice.request.ProductInformationRequest;
-import com.shopsense.catalogservice.response.PageResponse;
-import com.shopsense.catalogservice.response.ProductInformationResponse;
+import com.shopsense.commonservice.response.PageResponse;
+import com.shopsense.commonservice.response.ProductInformationResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 

@@ -1,6 +1,6 @@
 package com.shopsense.catalogservice.client;
 
-import com.shopsense.catalogservice.util.AppUrl;
+import com.shopsense.commonservice.util.AppUrl;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;

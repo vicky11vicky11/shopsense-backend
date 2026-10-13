@@ -1,10 +1,10 @@
 package com.shopsense.inventoryservice.service;
 
+import com.shopsense.commonservice.response.AvailabilityResponse;
 import com.shopsense.inventoryservice.request.BulkInventoryRequest;
 import com.shopsense.inventoryservice.request.CreateInventoryRequest;
 import com.shopsense.inventoryservice.request.StockAdjustmentRequest;
 import com.shopsense.inventoryservice.request.UpdateInventoryRequest;
-import com.shopsense.inventoryservice.response.AvailabilityResponse;
 import com.shopsense.inventoryservice.response.InventoryResponse;
 import com.shopsense.inventoryservice.response.StockMovementResponse;
 

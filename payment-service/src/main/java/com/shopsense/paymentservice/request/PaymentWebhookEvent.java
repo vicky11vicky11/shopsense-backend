@@ -3,7 +3,7 @@ package com.shopsense.paymentservice.request;
 
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
-import com.shopsense.paymentservice.enums.RefundStatus;
+import com.shopsense.commonservice.enums.RefundStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

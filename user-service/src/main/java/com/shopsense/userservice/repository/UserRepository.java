@@ -1,8 +1,8 @@
 package com.shopsense.userservice.repository;
 
+import com.shopsense.commonservice.enums.UserRole;
 import com.shopsense.userservice.entity.User;
-import com.shopsense.userservice.enums.UserRole;
-import com.shopsense.userservice.enums.UserStatus;
+import com.shopsense.commonservice.enums.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

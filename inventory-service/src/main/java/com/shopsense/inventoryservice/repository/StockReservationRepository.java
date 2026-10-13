@@ -1,7 +1,7 @@
 package com.shopsense.inventoryservice.repository;
 
+import com.shopsense.commonservice.enums.ReservationStatus;
 import com.shopsense.inventoryservice.entity.StockReservation;
-import com.shopsense.inventoryservice.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

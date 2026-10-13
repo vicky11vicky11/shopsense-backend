@@ -1,6 +1,6 @@
 package com.shopsense.paymentservice.response;
 
-import com.shopsense.paymentservice.enums.RefundStatus;
+import com.shopsense.commonservice.enums.RefundStatus;
 import lombok.*;
 
 import java.math.BigDecimal;

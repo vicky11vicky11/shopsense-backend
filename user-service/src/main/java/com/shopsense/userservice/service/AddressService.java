@@ -1,8 +1,8 @@
 package com.shopsense.userservice.service;
 
+import com.shopsense.commonservice.response.PageResponse;
 import com.shopsense.userservice.request.AddressRequest;
 import com.shopsense.userservice.response.AddressResponse;
-import com.shopsense.userservice.response.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 

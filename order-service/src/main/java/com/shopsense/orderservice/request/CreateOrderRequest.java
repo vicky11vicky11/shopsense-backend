@@ -1,6 +1,6 @@
 package com.shopsense.orderservice.request;
 
-import com.shopsense.orderservice.enums.Currency;
+import com.shopsense.commonservice.enums.Currency;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

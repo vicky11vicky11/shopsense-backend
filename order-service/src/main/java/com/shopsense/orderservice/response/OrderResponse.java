@@ -1,7 +1,9 @@
 package com.shopsense.orderservice.response;
 
-import com.shopsense.orderservice.enums.Currency;
-import com.shopsense.orderservice.enums.OrderStatus;
+import com.shopsense.commonservice.enums.Currency;
+import com.shopsense.commonservice.enums.OrderStatus;
+import com.shopsense.commonservice.response.OrderItemResponse;
+import com.shopsense.commonservice.response.OrderStatusHistoryResponse;
 import lombok.Builder;
 import lombok.Getter;
 

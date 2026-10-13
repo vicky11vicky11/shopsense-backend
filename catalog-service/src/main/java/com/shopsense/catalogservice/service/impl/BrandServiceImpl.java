@@ -2,15 +2,15 @@ package com.shopsense.catalogservice.service.impl;
 
 import com.shopsense.catalogservice.client.MediaServiceClient;
 import com.shopsense.catalogservice.entity.Brand;
-import com.shopsense.catalogservice.enums.MediaType;
 import com.shopsense.catalogservice.exception.ResourceAlreadyExistsException;
 import com.shopsense.catalogservice.exception.ResourceNotFoundException;
 import com.shopsense.catalogservice.mapper.BrandMapper;
 import com.shopsense.catalogservice.repository.BrandRepository;
 import com.shopsense.catalogservice.request.BrandRequest;
 import com.shopsense.catalogservice.response.BrandResponse;
-import com.shopsense.catalogservice.response.PageResponse;
 import com.shopsense.catalogservice.service.BrandService;
+import com.shopsense.commonservice.enums.MediaType;
+import com.shopsense.commonservice.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

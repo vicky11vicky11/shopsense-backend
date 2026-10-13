@@ -1,7 +1,7 @@
 package com.shopsense.orderservice.repository;
 
+import com.shopsense.commonservice.enums.OrderStatus;
 import com.shopsense.orderservice.entity.Order;
-import com.shopsense.orderservice.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

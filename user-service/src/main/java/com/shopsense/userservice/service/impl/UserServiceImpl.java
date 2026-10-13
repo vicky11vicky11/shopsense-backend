@@ -1,19 +1,19 @@
 package com.shopsense.userservice.service.impl;
 
+import com.shopsense.commonservice.enums.UserRole;
+import com.shopsense.commonservice.event.NotificationEvent;
+import com.shopsense.commonservice.response.PageResponse;
+import com.shopsense.commonservice.response.UserResponse;
 import com.shopsense.userservice.client.MediaServiceClient;
 import com.shopsense.userservice.entity.User;
-import com.shopsense.userservice.enums.MediaType;
-import com.shopsense.userservice.enums.NotificationEventType;
-import com.shopsense.userservice.enums.UserRole;
-import com.shopsense.userservice.enums.UserStatus;
-import com.shopsense.userservice.event.NotificationEvent;
+import com.shopsense.commonservice.enums.MediaType;
+import com.shopsense.commonservice.enums.NotificationEventType;
+import com.shopsense.commonservice.enums.UserStatus;
 import com.shopsense.userservice.exception.ResourceNotFoundException;
 import com.shopsense.userservice.mapper.UserMapper;
 import com.shopsense.userservice.producer.NotificationEventProducer;
 import com.shopsense.userservice.repository.UserRepository;
 import com.shopsense.userservice.request.UserRequest;
-import com.shopsense.userservice.response.PageResponse;
-import com.shopsense.userservice.response.UserResponse;
 import com.shopsense.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

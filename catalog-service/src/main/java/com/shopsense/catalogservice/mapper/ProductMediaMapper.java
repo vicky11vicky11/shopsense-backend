@@ -2,7 +2,7 @@ package com.shopsense.catalogservice.mapper;
 
 import com.shopsense.catalogservice.entity.ProductMedia;
 import com.shopsense.catalogservice.request.ProductMediaRequest;
-import com.shopsense.catalogservice.response.ProductMediaResponse;
+import com.shopsense.commonservice.response.ProductMediaResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

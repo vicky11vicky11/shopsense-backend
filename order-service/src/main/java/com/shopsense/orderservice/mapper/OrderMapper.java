@@ -1,11 +1,11 @@
 package com.shopsense.orderservice.mapper;
 
+import com.shopsense.commonservice.response.OrderItemResponse;
+import com.shopsense.commonservice.response.OrderStatusHistoryResponse;
 import com.shopsense.orderservice.entity.Order;
 import com.shopsense.orderservice.entity.OrderItem;
 import com.shopsense.orderservice.entity.OrderStatusHistory;
-import com.shopsense.orderservice.response.OrderItemResponse;
 import com.shopsense.orderservice.response.OrderResponse;
-import com.shopsense.orderservice.response.OrderStatusHistoryResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 

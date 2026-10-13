@@ -1,7 +1,7 @@
 package com.shopsense.mediaservice.entity;
 
 
-import com.shopsense.mediaservice.enums.MediaType;
+import com.shopsense.commonservice.enums.MediaType;
 import lombok.*;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;

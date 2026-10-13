@@ -1,9 +1,9 @@
 package com.shopsense.inventoryservice.controller;
 
-import com.shopsense.inventoryservice.request.ReserveStockRequest;
-import com.shopsense.inventoryservice.response.StockReservationResponse;
+import com.shopsense.commonservice.request.ReserveStockRequest;
+import com.shopsense.commonservice.response.StockReservationResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.inventoryservice.service.StockReservationService;
-import com.shopsense.inventoryservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

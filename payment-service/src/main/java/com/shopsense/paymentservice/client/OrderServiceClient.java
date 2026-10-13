@@ -1,8 +1,8 @@
 package com.shopsense.paymentservice.client;
 
-import com.shopsense.paymentservice.request.UpdateOrderStatusRequest;
+import com.shopsense.commonservice.request.UpdateOrderStatusRequest;
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.paymentservice.response.ProductOrderResponse;
-import com.shopsense.paymentservice.util.AppUrl;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;

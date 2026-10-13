@@ -1,6 +1,6 @@
 package com.shopsense.orderservice.entity;
 
-import com.shopsense.orderservice.enums.Currency;
+import com.shopsense.commonservice.enums.Currency;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

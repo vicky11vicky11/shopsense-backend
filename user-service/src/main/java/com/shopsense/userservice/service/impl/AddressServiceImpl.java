@@ -1,8 +1,9 @@
 package com.shopsense.userservice.service.impl;
 
+import com.shopsense.commonservice.response.PageResponse;
 import com.shopsense.userservice.entity.Address;
 import com.shopsense.userservice.entity.User;
-import com.shopsense.userservice.enums.UserStatus;
+import com.shopsense.commonservice.enums.UserStatus;
 import com.shopsense.userservice.exception.ResourceNotFoundException;
 import com.shopsense.userservice.exception.UserAccountBlockedException;
 import com.shopsense.userservice.exception.UserAccountSuspendedException;
@@ -11,7 +12,6 @@ import com.shopsense.userservice.repository.AddressRepository;
 import com.shopsense.userservice.repository.UserRepository;
 import com.shopsense.userservice.request.AddressRequest;
 import com.shopsense.userservice.response.AddressResponse;
-import com.shopsense.userservice.response.PageResponse;
 import com.shopsense.userservice.service.AddressService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

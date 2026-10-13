@@ -1,7 +1,7 @@
 package com.shopsense.inventoryservice.service;
 
-import com.shopsense.inventoryservice.request.ReserveStockRequest;
-import com.shopsense.inventoryservice.response.StockReservationResponse;
+import com.shopsense.commonservice.request.ReserveStockRequest;
+import com.shopsense.commonservice.response.StockReservationResponse;
 
 import java.util.UUID;
 
@@ -15,7 +15,7 @@ public interface StockReservationService {
 
     StockReservationResponse getById(UUID reservationId);
 
-    StockReservationResponse getByOrderId(UUID orderId);
+    StockReservationResponse getByOrderId( UUID orderId);
 
     void expireReservations();
 

@@ -3,7 +3,7 @@ package com.shopsense.paymentservice.provider;
 import com.shopsense.paymentservice.config.StripeProperties;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
-import com.shopsense.paymentservice.enums.RefundStatus;
+import com.shopsense.commonservice.enums.RefundStatus;
 import com.shopsense.paymentservice.exception.GatewayException;
 import com.shopsense.paymentservice.exception.WebhookVerificationException;
 import com.shopsense.paymentservice.request.CreateGatewayPaymentRequest;

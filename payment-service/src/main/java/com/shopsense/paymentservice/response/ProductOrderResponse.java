@@ -1,8 +1,8 @@
 package com.shopsense.paymentservice.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.shopsense.paymentservice.enums.Currency;
-import com.shopsense.paymentservice.enums.OrderStatus;
+import com.shopsense.commonservice.enums.Currency;
+import com.shopsense.commonservice.enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

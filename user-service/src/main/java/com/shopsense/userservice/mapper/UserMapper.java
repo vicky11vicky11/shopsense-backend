@@ -1,8 +1,8 @@
 package com.shopsense.userservice.mapper;
 
+import com.shopsense.commonservice.response.UserResponse;
 import com.shopsense.userservice.entity.User;
 import com.shopsense.userservice.request.UserRequest;
-import com.shopsense.userservice.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

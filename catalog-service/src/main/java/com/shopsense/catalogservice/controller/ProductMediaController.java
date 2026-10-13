@@ -1,10 +1,10 @@
 package com.shopsense.catalogservice.controller;
 
 import com.shopsense.catalogservice.request.ProductMediaRequest;
-import com.shopsense.catalogservice.response.PageResponse;
-import com.shopsense.catalogservice.response.ProductMediaResponse;
 import com.shopsense.catalogservice.service.ProductMediaService;
-import com.shopsense.catalogservice.util.AppUrl;
+import com.shopsense.commonservice.response.PageResponse;
+import com.shopsense.commonservice.response.ProductMediaResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

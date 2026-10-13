@@ -2,7 +2,7 @@ package com.shopsense.catalogservice.mapper;
 
 import com.shopsense.catalogservice.entity.Product;
 import com.shopsense.catalogservice.request.ProductRequest;
-import com.shopsense.catalogservice.response.ProductResponse;
+import com.shopsense.commonservice.response.ProductResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

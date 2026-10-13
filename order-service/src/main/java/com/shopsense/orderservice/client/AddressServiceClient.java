@@ -1,7 +1,6 @@
 package com.shopsense.orderservice.client;
 
-import com.shopsense.orderservice.util.AppUrl;
-import org.springframework.web.bind.annotation.PathVariable;
+import com.shopsense.commonservice.util.AppUrl;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;

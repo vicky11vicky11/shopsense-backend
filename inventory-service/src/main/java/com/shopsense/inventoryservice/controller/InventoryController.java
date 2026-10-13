@@ -1,14 +1,14 @@
 package com.shopsense.inventoryservice.controller;
 
+import com.shopsense.commonservice.response.AvailabilityResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.inventoryservice.request.BulkInventoryRequest;
 import com.shopsense.inventoryservice.request.CreateInventoryRequest;
 import com.shopsense.inventoryservice.request.StockAdjustmentRequest;
 import com.shopsense.inventoryservice.request.UpdateInventoryRequest;
-import com.shopsense.inventoryservice.response.AvailabilityResponse;
 import com.shopsense.inventoryservice.response.InventoryResponse;
 import com.shopsense.inventoryservice.response.StockMovementResponse;
 import com.shopsense.inventoryservice.service.InventoryService;
-import com.shopsense.inventoryservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

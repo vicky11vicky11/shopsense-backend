@@ -1,9 +1,9 @@
 package com.shopsense.notificationservice.listener;
 
+import com.shopsense.commonservice.event.NotificationEvent;
+import com.shopsense.commonservice.util.RabbitMQConstants;
 import com.shopsense.notificationservice.request.MailRequest;
-import com.shopsense.notificationservice.event.NotificationEvent;
 import com.shopsense.notificationservice.service.EmailService;
-import com.shopsense.notificationservice.util.RabbitMQConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

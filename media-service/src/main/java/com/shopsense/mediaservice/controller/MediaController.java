@@ -1,14 +1,14 @@
 package com.shopsense.mediaservice.controller;
 
-import com.shopsense.mediaservice.enums.MediaType;
+import com.shopsense.commonservice.enums.MediaType;
+import com.shopsense.commonservice.response.MediaDetailsResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.mediaservice.request.BulkMediaRequest;
 import com.shopsense.mediaservice.request.BulkMediaUploadRequest;
 import com.shopsense.mediaservice.request.MediaRequest;
 import com.shopsense.mediaservice.request.MediaUpdateRequest;
-import com.shopsense.mediaservice.response.MediaDetailsResponse;
 import com.shopsense.mediaservice.response.MediaResponse;
 import com.shopsense.mediaservice.service.MediaService;
-import com.shopsense.mediaservice.util.AppUrl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

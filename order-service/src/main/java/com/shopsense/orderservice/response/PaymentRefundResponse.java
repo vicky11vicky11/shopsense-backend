@@ -1,6 +1,6 @@
 package com.shopsense.orderservice.response;
 
-import com.shopsense.orderservice.enums.RefundStatus;
+import com.shopsense.commonservice.enums.RefundStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

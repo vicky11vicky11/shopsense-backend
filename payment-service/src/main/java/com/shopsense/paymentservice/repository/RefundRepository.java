@@ -1,7 +1,7 @@
 package com.shopsense.paymentservice.repository;
 
 import com.shopsense.paymentservice.entity.Refund;
-import com.shopsense.paymentservice.enums.RefundStatus;
+import com.shopsense.commonservice.enums.RefundStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

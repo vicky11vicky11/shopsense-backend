@@ -1,8 +1,8 @@
 package com.shopsense.orderservice.client;
 
-import com.shopsense.orderservice.request.ReserveStockRequest;
-import com.shopsense.orderservice.response.StockReservationResponse;
-import com.shopsense.orderservice.util.AppUrl;
+import com.shopsense.commonservice.request.ReserveStockRequest;
+import com.shopsense.commonservice.response.StockReservationResponse;
+import com.shopsense.commonservice.util.AppUrl;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.GetExchange;

@@ -1,8 +1,8 @@
 package com.shopsense.notificationservice.service.impl;
 
+import com.shopsense.commonservice.enums.NotificationEventType;
 import com.shopsense.notificationservice.entity.Notification;
 import com.shopsense.notificationservice.enums.NotificationChannel;
-import com.shopsense.notificationservice.enums.NotificationEventType;
 import com.shopsense.notificationservice.enums.NotificationStatus;
 import com.shopsense.notificationservice.repository.NotificationRepository;
 import com.shopsense.notificationservice.request.MailRequest;

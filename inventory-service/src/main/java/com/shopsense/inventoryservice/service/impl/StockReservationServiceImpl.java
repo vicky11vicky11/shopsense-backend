@@ -1,17 +1,17 @@
 package com.shopsense.inventoryservice.service.impl;
 
+import com.shopsense.commonservice.enums.ReservationStatus;
+import com.shopsense.commonservice.request.ReserveStockRequest;
+import com.shopsense.commonservice.response.StockReservationResponse;
 import com.shopsense.inventoryservice.client.OrderServiceClient;
 import com.shopsense.inventoryservice.entity.StockMovement;
 import com.shopsense.inventoryservice.entity.StockReservation;
-import com.shopsense.inventoryservice.enums.ReservationStatus;
 import com.shopsense.inventoryservice.enums.StockMovementType;
 import com.shopsense.inventoryservice.exception.InsufficientStockException;
 import com.shopsense.inventoryservice.exception.ReservationNotFoundException;
 import com.shopsense.inventoryservice.repository.InventoryRepository;
 import com.shopsense.inventoryservice.repository.StockMovementRepository;
 import com.shopsense.inventoryservice.repository.StockReservationRepository;
-import com.shopsense.inventoryservice.request.ReserveStockRequest;
-import com.shopsense.inventoryservice.response.StockReservationResponse;
 import com.shopsense.inventoryservice.service.StockReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

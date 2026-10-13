@@ -1,6 +1,6 @@
 package com.shopsense.paymentservice.response;
 
-import com.shopsense.paymentservice.enums.Currency;
+import com.shopsense.commonservice.enums.Currency;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.enums.PaymentStatus;
 import lombok.*;

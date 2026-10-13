@@ -1,6 +1,6 @@
 package com.shopsense.notificationservice.config;
 
-import com.shopsense.notificationservice.util.RabbitMQConstants;
+import com.shopsense.commonservice.util.RabbitMQConstants;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;

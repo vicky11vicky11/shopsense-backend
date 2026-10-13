@@ -1,6 +1,6 @@
 package com.shopsense.paymentservice.entity;
 
-import com.shopsense.paymentservice.enums.RefundStatus;
+import com.shopsense.commonservice.enums.RefundStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

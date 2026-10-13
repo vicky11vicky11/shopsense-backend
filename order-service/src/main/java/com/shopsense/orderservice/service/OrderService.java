@@ -1,10 +1,10 @@
 package com.shopsense.orderservice.service;
 
-import com.shopsense.orderservice.enums.OrderStatus;
+import com.shopsense.commonservice.enums.OrderStatus;
+import com.shopsense.commonservice.request.UpdateOrderStatusRequest;
+import com.shopsense.commonservice.response.PageResponse;
 import com.shopsense.orderservice.request.CreateOrderRequest;
-import com.shopsense.orderservice.request.UpdateOrderStatusRequest;
 import com.shopsense.orderservice.response.OrderResponse;
-import com.shopsense.orderservice.response.PageResponse;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.UUID;
