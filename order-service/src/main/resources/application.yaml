@@ -100,3 +100,10 @@ order:
     cart-ttl-days: ${REDIS_CART_TTL_DAYS}
     tax-rate: ${ORDER_TAX_RATE}
     shipping-rate: ${ORDER_SHIPPING_RATE}
+springdoc:
+    api-docs:
+        path: /v3/api-docs
+    swagger-ui:
+        path: /swagger-ui.html
+        operations-sorter: method
+        tags-sorter: alpha

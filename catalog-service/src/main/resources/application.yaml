@@ -77,3 +77,10 @@ eureka:
             defaultZone: ${EUREKA_URL}
         register-with-eureka: true
         fetch-registry: true
+springdoc:
+    api-docs:
+        path: /v3/api-docs
+    swagger-ui:
+        path: /swagger-ui.html
+        operations-sorter: method
+        tags-sorter: alpha
