@@ -46,6 +46,16 @@ public class GatewayRouteConfig {
                                 .setKeyResolver(userOrIpKeyResolver)))
                         .uri(ServiceName.PAYMENT))
 
+                .route("notification-service", route -> route.path("/api/v1/notifications/**")
+                        .filters(filters -> filters.requestRateLimiter(config -> config.setRateLimiter(redisRateLimiter)
+                                .setKeyResolver(userOrIpKeyResolver)))
+                        .uri(ServiceName.NOTIFICATION))
+
+                .route("orchestrator-service", route -> route.path("/api/v1/orchestrator/**")
+                        .filters(filters -> filters.requestRateLimiter(config -> config.setRateLimiter(redisRateLimiter)
+                                .setKeyResolver(userOrIpKeyResolver)))
+                        .uri(ServiceName.ORCHESTRATOR))
+
                 .build();
     }
 }

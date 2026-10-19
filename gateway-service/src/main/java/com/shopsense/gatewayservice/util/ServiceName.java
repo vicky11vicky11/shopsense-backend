@@ -11,4 +11,6 @@ public class ServiceName {
     public static final String ORDER = "lb://order-service";
     public static final String USER = "lb://user-service";
     public static final String PAYMENT = "lb://payment-service";
+    public static final String NOTIFICATION = "lb://notification-service";
+    public static final String ORCHESTRATOR = "lb://orchestrator-service";
 }
