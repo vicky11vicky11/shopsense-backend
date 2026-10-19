@@ -9,6 +9,8 @@ server:
 spring:
     application:
         name: payment-service
+    kafka:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     servlet:
         multipart:
             max-file-size: 10MB

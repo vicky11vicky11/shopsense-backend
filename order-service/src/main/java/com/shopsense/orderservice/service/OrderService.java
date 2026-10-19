@@ -5,6 +5,7 @@ import com.shopsense.commonservice.request.UpdateOrderStatusRequest;
 import com.shopsense.commonservice.response.PageResponse;
 import com.shopsense.orderservice.request.CreateOrderRequest;
 import com.shopsense.orderservice.response.OrderResponse;
+import com.shopsense.commonservice.event.OrderStatusUpdateRequestedEvent;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.UUID;
@@ -28,5 +29,7 @@ public interface OrderService {
     void reservationFailedStatusUpdate( UUID orderId );
 
     void cancelOrder( UUID userId, UUID orderId );
+
+    void applySagaStatus(OrderStatusUpdateRequestedEvent event);
 
 }

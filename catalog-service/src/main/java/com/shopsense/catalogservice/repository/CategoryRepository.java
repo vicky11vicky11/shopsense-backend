@@ -12,7 +12,9 @@ import java.util.UUID;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
-    boolean existsByCategoryNameIgnoreCaseAndParentCategoryId( String categoryName, UUID parentCategoryId );
+    boolean existsByCategoryNameIgnoreCase(String categoryName);
+
+    boolean existsByCategoryNameIgnoreCaseAndIdNot(String categoryName, UUID id);
 
     Page<Category> findByActive( Boolean active, Pageable pageable );
 

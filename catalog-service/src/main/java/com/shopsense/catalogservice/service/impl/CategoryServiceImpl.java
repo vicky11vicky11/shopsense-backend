@@ -35,8 +35,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse createCategory( CategoryRequest request ) {
-        boolean exists = categoryRepository.existsByCategoryNameIgnoreCaseAndParentCategoryId(request.getCategoryName(), request.getParentCategoryId());
-        if ( exists ) {
+        if ( categoryRepository.existsByCategoryNameIgnoreCase(request.getCategoryName()) ) {
             throw new ResourceAlreadyExistsException("Category already exists with name: " + request.getCategoryName());
         }
         Category parentCategory = null;
@@ -93,16 +92,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryResponse updateCategory( UUID categoryId, CategoryRequest request ) {
         Category category = findCategoryById(categoryId);
-        UUID currentParentId = category.getParentCategory() != null ? category.getParentCategory()
-                .getId() : null;
         boolean nameChanged = !category.getCategoryName()
                 .equalsIgnoreCase(request.getCategoryName());
-        boolean parentChanged = !java.util.Objects.equals(currentParentId, request.getParentCategoryId());
-        if ( nameChanged || parentChanged ) {
-            boolean exists = categoryRepository.existsByCategoryNameIgnoreCaseAndParentCategoryId(request.getCategoryName(), request.getParentCategoryId());
-            if ( exists ) {
-                throw new ResourceAlreadyExistsException("Category already exists with name: " + request.getCategoryName());
-            }
+        if ( nameChanged && categoryRepository.existsByCategoryNameIgnoreCaseAndIdNot(request.getCategoryName(), categoryId) ) {
+            throw new ResourceAlreadyExistsException("Category already exists with name: " + request.getCategoryName());
         }
         if ( categoryId.equals(request.getParentCategoryId()) ) {
             throw new IllegalArgumentException("Category cannot be its own parent");
@@ -111,7 +104,7 @@ public class CategoryServiceImpl implements CategoryService {
         if ( request.getParentCategoryId() != null ) {
             parentCategory = findCategoryById(request.getParentCategoryId());
         }
-        if ( Objects.equals(category.getCategoryImageId(), request.getCategoryImageId()) ) {
+        if ( !Objects.equals(category.getCategoryImageId(), request.getCategoryImageId()) ) {
             validateCategoryImage(request.getCategoryImageId());
         }
         categoryMapper.updateEntity(request, category);

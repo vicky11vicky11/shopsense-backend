@@ -29,6 +29,12 @@ public class Payment {
     @Column(name = "order_id", nullable = false)
     private UUID orderId;
 
+    @Column(name = "correlation_id")
+    private UUID correlationId;
+
+    @Column(name = "saga_idempotency_key", length = 150)
+    private String sagaIdempotencyKey;
+
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 

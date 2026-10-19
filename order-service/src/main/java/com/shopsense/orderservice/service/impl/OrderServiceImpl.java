@@ -4,6 +4,8 @@ import com.shopsense.commonservice.enums.NotificationEventType;
 import com.shopsense.commonservice.enums.OrderStatus;
 import com.shopsense.commonservice.enums.RefundStatus;
 import com.shopsense.commonservice.event.NotificationEvent;
+import com.shopsense.commonservice.event.OrderCreatedEvent;
+import com.shopsense.commonservice.event.OrderStatusUpdateRequestedEvent;
 import com.shopsense.commonservice.request.ReserveStockRequest;
 import com.shopsense.commonservice.request.UpdateOrderStatusRequest;
 import com.shopsense.commonservice.response.*;
@@ -30,8 +32,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shopsense.commonservice.util.KafkaTopics;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -74,6 +80,10 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentServiceClient paymentServiceClient;
 
     private final NotificationEventProducer notificationEventProducer;
+
+    private final ObjectMapper objectMapper;
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     @Transactional
@@ -151,35 +161,33 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.PENDING_RESERVATION);
         Order savedOrder = orderRepository.saveAndFlush(order);
         saveStatusHistory(savedOrder, null, OrderStatus.PENDING_RESERVATION, "Order created", "Order created and waiting for stock reservation");
-        ReserveStockRequest reservationRequest = ReserveStockRequest.builder()
-                .orderId(savedOrder.getId())
-                .items(request.getItems()
-                        .stream()
-                        .map(item -> ReserveStockRequest.ReservationItem.builder()
-                                .productId(item.getProductId())
-                                .quantity(item.getQuantity())
-                                .build())
-                        .toList())
-                .build();
-        StockReservationResponse stockReservationResponse = stockReservationServiceClient.reserve(reservationRequest);
-        if ( !ReservationStatus.RESERVED.equals(stockReservationResponse.getStatus()) ) {
-            throw new BadRequestException("Unable to reserve stock for the order");
-        }
-        OrderStatus previousStatus = savedOrder.getStatus();
-        savedOrder.setStatus(OrderStatus.PAYMENT_PENDING);
-        savedOrder = orderRepository.saveAndFlush(savedOrder);
-        saveStatusHistory(savedOrder, previousStatus, OrderStatus.PAYMENT_PENDING, "Stock reserved", "Inventory stock successfully reserved for the order");
         OrderIdempotency idempotency = OrderIdempotency.builder()
                 .userId(userId)
                 .idempotencyKey(idempotencyKey)
                 .order(savedOrder)
                 .build();
         orderIdempotencyRepository.save(idempotency);
+        publishOrderCreatedEvent(savedOrder, idempotencyKey);
         for ( OrderItemRequest item : request.getItems() ) {
             cartService.decreaseItemQuantity(userId, item.getProductId(), item.getQuantity());
         }
         log.info("Order created successfully: orderId={}, orderNumber={}, userId={}, status={}", savedOrder.getId(), savedOrder.getOrderNumber(), userId, savedOrder.getStatus());
         return orderMapper.toResponse(savedOrder);
+    }
+
+    @Override
+    @Transactional
+    public void applySagaStatus(OrderStatusUpdateRequestedEvent event) {
+        Order order = orderRepository.findById(event.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        if (order.getStatus() == event.getStatus()) {
+            return;
+        }
+        validateStatusTransition(order.getStatus(), event.getStatus());
+        OrderStatus previousStatus = order.getStatus();
+        order.setStatus(event.getStatus());
+        Order savedOrder = orderRepository.saveAndFlush(order);
+        saveStatusHistory(savedOrder, previousStatus, event.getStatus(), event.getReason(), "Saga status update");
     }
 
     @Override
@@ -250,6 +258,8 @@ public class OrderServiceImpl implements OrderService {
             stockReservationServiceClient.consumeByOrderId(orderId);
             UserResponse userResponse = customerServiceClient.getUserById(order.getUserId());
             publishMailEvent(NotificationEventType.ORDER_PLACED, userResponse.getEmail(), "Order placed successfully for orderId=" + orderId);
+        } else if ( newStatus == OrderStatus.CANCELLED && currentStatus == OrderStatus.PAYMENT_PENDING ) {
+            stockReservationServiceClient.releaseByOrderId(orderId);
         }
         order.setStatus(newStatus);
         Order savedOrder = orderRepository.saveAndFlush(order);
@@ -417,6 +427,18 @@ public class OrderServiceImpl implements OrderService {
                 .description(description)
                 .build();
         orderStatusHistoryRepository.save(history);
+    }
+
+    private void publishOrderCreatedEvent(Order order, String idempotencyKey) {
+        OrderCreatedEvent event = OrderCreatedEvent.of(order.getId(), order.getUserId(), order.getTotalAmount(), order.getCurrency(),
+                order.getItems().stream().map(item -> OrderCreatedEvent.OrderItem.builder()
+                        .productId(item.getProductId()).quantity(item.getQuantity()).build()).toList(),
+                UUID.randomUUID(), idempotencyKey);
+        try {
+            kafkaTemplate.send(KafkaTopics.ORDER_EVENTS, order.getId().toString(), objectMapper.writeValueAsString(event));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Unable to serialize order-created event", exception);
+        }
     }
 
     private void publishMailEvent( NotificationEventType notificationEventType, String userEmail, String content ) {

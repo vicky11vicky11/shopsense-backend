@@ -23,6 +23,8 @@ import com.shopsense.paymentservice.repository.RefundRepository;
 import com.shopsense.paymentservice.request.*;
 import com.shopsense.paymentservice.response.*;
 import com.shopsense.paymentservice.service.PaymentService;
+import com.shopsense.paymentservice.service.SagaPaymentService;
+import com.shopsense.commonservice.enums.EventType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -56,6 +58,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final NotificationEventProducer notificationEventProducer;
 
     private final CustomerServiceClient customerServiceClient;
+
+    private final SagaPaymentService sagaPaymentService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -488,9 +492,11 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setFailureReason(null);
         paymentRepository.save(payment);
         log.info("PAYMENT MARKED SUCCESS | paymentId={} | orderId={}", payment.getId(), payment.getOrderId());
-        log.info("UPDATING ORDER TO CONFIRMED | orderId={}", payment.getOrderId());
-        updateOrderStatus(payment.getUserId(), payment, OrderStatus.CONFIRMED, "Payment successful", "Payment successfully confirmed by payment gateway");
-        log.info("ORDER CONFIRMED AFTER PAYMENT | orderId={} | paymentId={}", payment.getOrderId(), payment.getId());
+        if ( payment.getCorrelationId() == null ) {
+            updateOrderStatus(payment.getUserId(), payment, OrderStatus.CONFIRMED, "Payment completed", "Payment completed successfully");
+        } else {
+            publishSagaResult(payment, EventType.PAYMENT_COMPLETED, null);
+        }
         UserResponse userResponse = getUserById(payment.getUserId());
         publishMailEvent(NotificationEventType.PAYMENT_PAID, userResponse.getEmail(), "Payment amount paid for order id " + payment.getOrderId());
     }
@@ -506,6 +512,11 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setFailureReason(failureReason);
         paymentRepository.save(payment);
         log.warn("PAYMENT MARKED FAILED | paymentId={} | orderId={}", payment.getId(), payment.getOrderId());
+        if ( payment.getCorrelationId() == null ) {
+            updateOrderStatus(payment.getUserId(), payment, OrderStatus.CANCELLED, failureReason, "Order cancelled because payment failed");
+        } else {
+            publishSagaResult(payment, EventType.PAYMENT_FAILED, failureReason);
+        }
         UserResponse userResponse = getUserById(payment.getUserId());
         publishMailEvent(NotificationEventType.PAYMENT_FAILED, userResponse.getEmail(), "Payment failed for order id " + payment.getOrderId());
     }
@@ -521,6 +532,17 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
         processedWebhookEventRepository.save(processedEvent);
         log.debug("PROCESSED WEBHOOK EVENT SAVED | gateway={} | eventId={}", event.getGateway(), event.getEventId());
+    }
+
+    private void publishSagaResult(Payment payment, EventType type, String reason) {
+        if (payment.getCorrelationId() == null) {
+            return;
+        }
+        try {
+            sagaPaymentService.publish(payment.getOrderId(), payment.getCorrelationId(), payment.getSagaIdempotencyKey(), type, reason);
+        } catch (Exception exception) {
+            throw new PaymentException("Unable to publish payment saga event: " + exception.getMessage());
+        }
     }
 
     private void handleRefundWebhook( PaymentWebhookEvent event ) {

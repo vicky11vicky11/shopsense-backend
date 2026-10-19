@@ -158,6 +158,46 @@ services:
             retries: 10
             start_period: 20s
 
+    kafka:
+        image: apache/kafka:4.3.1
+        container_name: kafka
+        restart: unless-stopped
+        ports:
+            - "9092:9092"
+        environment:
+            # Node identity and KRaft mode
+            KAFKA_NODE_ID: 1
+            KAFKA_PROCESS_ROLES: broker,controller
+            # Network listeners
+            KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+            KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+            # KRaft controller
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+            # Single-node development settings
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+            # Storage
+            KAFKA_LOG_DIRS: /var/lib/kafka/data
+        volumes:
+            - /home/vicky/Projects/ShopSense/data/kafka:/var/lib/kafka/data
+        healthcheck:
+            test:
+              [
+                  "CMD",
+                  "/opt/kafka/bin/kafka-broker-api-versions.sh",
+                  "--bootstrap-server",
+                  "localhost:9092"
+              ]
+            interval: 10s
+            timeout: 10s
+            retries: 10
+            start_period: 20s
+
 
     # ============================================================
     # OBSERVABILITY

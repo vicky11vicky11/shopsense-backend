@@ -135,7 +135,7 @@ public class MediaServiceImpl implements MediaService {
             if ( !"ok".equals(result) ) {
                 log.error("CRITICAL: Cloudinary delete returned non-ok result '{}' for orphaned asset: {}", result, media.getPublicId());
             } else {
-                log.info("Image deleted successfully from Cloudinary. Media ID: {}", id);
+                log.info("Image deleted successfully of Cloudinary. Media ID: {}", id);
             }
         } catch ( IOException exception ) {
             log.error("CRITICAL: DB record deleted but Cloudinary asset remains orphaned: {}", media.getPublicId(), exception);
