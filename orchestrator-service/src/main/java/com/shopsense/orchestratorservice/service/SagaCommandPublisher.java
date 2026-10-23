@@ -32,7 +32,6 @@ public class SagaCommandPublisher {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional
     public void publishImmediatelyAfterCommit( SagaCommandRecord queuedCommand ) {
         commands.findById(queuedCommand.getId()).ifPresent(this::publish);
     }

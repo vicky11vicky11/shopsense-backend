@@ -24,6 +24,28 @@ management:
     info:
         env:
             enabled: true
+    tracing:
+        sampling:
+            probability: 1.0
+    opentelemetry:
+        resource-attributes:
+            service.name: ${spring.application.name}
+        tracing:
+            export:
+                otlp:
+                    endpoint: ${TEMPO_URL}
+    prometheus:
+        metrics:
+            export:
+                enabled: true
+logging:
+    file:
+        name: ./deploy/logs/${spring.application.name}.log
+    pattern:
+        correlation: "[%X{traceId:-},%X{spanId:-}]"
+    level:
+        root: info
+        com.shopsense: trace
 eureka:
     instance:
         prefer-ip-address: true

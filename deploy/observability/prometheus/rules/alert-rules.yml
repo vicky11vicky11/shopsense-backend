@@ -1,0 +1,134 @@
+groups:
+    -   name: shopsense-availability
+        rules:
+            -   alert: ShopSenseServiceUnavailable
+                expr: up{job="shopsense-services"} == 0
+                for: 1m
+                labels:
+                    severity: critical
+                annotations:
+                    summary: "Service unavailable: {{ $labels.service }}"
+                    description: "Service {{ $labels.service }} at {{ $labels.instance }} is unreachable."
+
+    -   name: shopsense-http-errors
+        rules:
+            -   alert: ShopSenseHttp5xxWarning
+                expr: |
+                    (
+                      sum by (service) (
+                        rate(http_server_requests_seconds_count{
+                          job="shopsense-services",status=~"5.."
+                        }[5m])
+                      )
+                      /
+                      clamp_min(
+                        sum by (service) (
+                          rate(http_server_requests_seconds_count{
+                            job="shopsense-services"
+                          }[5m])
+                        ), 0.001
+                      )
+                    ) > 0.05
+                for: 5m
+                labels:
+                    severity: warning
+                annotations:
+                    summary: "HTTP 5xx rate above 5%: {{ $labels.service }}"
+                    description: "HTTP 5xx error rate has exceeded 5% for 5 minutes."
+
+            -   alert: ShopSenseHttp5xxCritical
+                expr: |
+                    (
+                      sum by (service) (
+                        rate(http_server_requests_seconds_count{
+                          job="shopsense-services",status=~"5.."
+                        }[2m])
+                      )
+                      /
+                      clamp_min(
+                        sum by (service) (
+                          rate(http_server_requests_seconds_count{
+                            job="shopsense-services"
+                          }[2m])
+                        ), 0.001
+                      )
+                    ) > 0.15
+                for: 2m
+                labels:
+                    severity: critical
+                annotations:
+                    summary: "HTTP 5xx rate above 15%: {{ $labels.service }}"
+                    description: "HTTP 5xx error rate has exceeded 15% for 2 minutes."
+
+    -   name: shopsense-jvm
+        rules:
+            -   alert: ShopSenseJvmHeap75Percent
+                expr: |
+                    (
+                      sum by (service, instance) (
+                        jvm_memory_used_bytes{
+                          job="shopsense-services",area="heap"
+                        }
+                      )
+                      /
+                      clamp_min(
+                        sum by (service, instance) (
+                          jvm_memory_max_bytes{
+                            job="shopsense-services",area="heap"
+                          }
+                        ), 1
+                      )
+                    ) > 0.75
+                for: 2m
+                labels:
+                    severity: warning
+                annotations:
+                    summary: "JVM heap above 75%: {{ $labels.service }}"
+
+            -   alert: ShopSenseJvmHeap85Percent
+                expr: |
+                    (
+                      sum by (service, instance) (
+                        jvm_memory_used_bytes{
+                          job="shopsense-services",area="heap"
+                        }
+                      )
+                      /
+                      clamp_min(
+                        sum by (service, instance) (
+                          jvm_memory_max_bytes{
+                            job="shopsense-services",area="heap"
+                          }
+                        ), 1
+                      )
+                    ) > 0.85
+                for: 2m
+                labels:
+                    severity: critical
+                annotations:
+                    summary: "JVM heap above 85%: {{ $labels.service }}"
+
+            -   alert: ShopSenseJvmHeap95Percent
+                expr: |
+                    (
+                      sum by (service, instance) (
+                        jvm_memory_used_bytes{
+                          job="shopsense-services",area="heap"
+                        }
+                      )
+                      /
+                      clamp_min(
+                        sum by (service, instance) (
+                          jvm_memory_max_bytes{
+                            job="shopsense-services",area="heap"
+                          }
+                        ), 1
+                      )
+                    ) > 0.95
+                for: 2m
+                labels:
+                    severity: critical
+                    urgency: emergency
+                annotations:
+                    summary: "Emergency JVM heap usage above 95%: {{ $labels.service }}"
+                    description: "Investigate memory pressure immediately."

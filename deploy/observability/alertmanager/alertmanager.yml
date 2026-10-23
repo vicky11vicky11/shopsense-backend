@@ -1,0 +1,42 @@
+global:
+    smtp_smarthost: "smtp.gmail.com:587"
+    smtp_from: "vigneshhmuthusamy@gmail.com"
+    smtp_auth_username: "vigneshhmuthusamy@gmail.com"
+    smtp_auth_password: "rnhxsdsbchtpftdu"
+    smtp_require_tls: true
+
+route:
+    receiver: shopsense-email
+    group_by:
+        - alertname
+        - service
+        - severity
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+    routes:
+        -   matchers:
+                - severity="critical"
+            receiver: shopsense-email
+            group_wait: 10s
+            repeat_interval: 1h
+
+receivers:
+    -   name: shopsense-email
+        email_configs:
+            -   to: "vigneshmmuthusamy@gmail.com"
+                send_resolved: true
+                headers:
+                    subject: '[ShopSense][{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+                html: |
+                    <h2>ShopSense Alert: {{ .Status | toUpper }}</h2>
+                    <p><b>Alert:</b> {{ .CommonLabels.alertname }}</p>
+                    <p><b>Severity:</b> {{ .CommonLabels.severity }}</p>
+                    {{ range .Alerts }}
+                    <hr>
+                    <p><b>Summary:</b> {{ .Annotations.summary }}</p>
+                    <p><b>Description:</b> {{ .Annotations.description }}</p>
+                    <p><b>Service:</b> {{ .Labels.service }}</p>
+                    <p><b>Instance:</b> {{ .Labels.instance }}</p>
+                    <p><b>Started:</b> {{ .StartsAt }}</p>
+                    {{ end }}

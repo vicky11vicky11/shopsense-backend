@@ -3,6 +3,7 @@ package com.shopsense.paymentservice.controller;
 import com.shopsense.commonservice.util.AppUrl;
 import com.shopsense.paymentservice.enums.PaymentGateway;
 import com.shopsense.paymentservice.service.PaymentService;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ public class PaymentWebhookController {
 
     private final PaymentService paymentService;
 
+    @Hidden
     @PostMapping("/webhooks/razorpay")
     public ResponseEntity<Void> razorpayWebhook( @RequestHeader(value = "X-Razorpay-Signature") String signature, @RequestHeader(value = "x-razorpay-event-id", required = false) String eventId, @RequestBody String payload ) {
         log.info("RAZORPAY WEBHOOK RECEIVED | eventId={} | payloadLength={}", eventId, payload != null ? payload.length() : 0);
@@ -25,7 +27,7 @@ public class PaymentWebhookController {
                 .build();
     }
 
-
+    @Hidden
     @PostMapping("/webhooks/stripe")
     public ResponseEntity<Void> stripeWebhook( @RequestHeader("Stripe-Signature") String signature, @RequestBody String payload ) {
         log.info("STRIPE WEBHOOK RECEIVED | payloadLength={}", payload != null ? payload.length() : 0);

@@ -1,3 +1,10 @@
+rule_files:
+    - /etc/prometheus/alert-rules.yml
+alerting:
+    alertmanagers:
+        -   static_configs:
+                -   targets:
+                        - alertmanager:9093
 global:
     scrape_interval: 15s
     evaluation_interval: 15s
@@ -18,7 +25,7 @@ scrape_configs:
             # Only monitor these ShopSense services
             # ----------------------------------------------------------
             -   source_labels: [ __meta_eureka_app_name ]
-                regex: "GATEWAY-SERVICE|USER-SERVICE|CATALOG-SERVICE|INVENTORY-SERVICE|ORDER-SERVICE|PAYMENT-SERVICE|NOTIFICATION-SERVICE|MEDIA-SERVICE"
+                regex: "EUREKA_SERVICE|GATEWAY-SERVICE|USER-SERVICE|CATALOG-SERVICE|INVENTORY-SERVICE|ORDER-SERVICE|PAYMENT-SERVICE|NOTIFICATION-SERVICE|MEDIA-SERVICE|ORCHESTRATOR-SERVICE"
                 action: keep
             # ----------------------------------------------------------
             # Eureka application name -> service label

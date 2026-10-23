@@ -8,6 +8,8 @@ services:
         image: mongo:8.3.8-noble
         restart: unless-stopped
         tty: true
+        mem_limit: 1536m
+        cpus: 1
         ports:
             - "27017:27017"
         env_file:
@@ -34,6 +36,8 @@ services:
     mysql-cleanup:
         image: busybox:latest
         container_name: mysql-cleanup
+        mem_limit: 64m
+        cpus: 0.25
         command: >
             sh -c "
             rm -f /var/lib/mysql/mysql.sock &&
@@ -49,6 +53,8 @@ services:
         image: mysql:8.4
         restart: unless-stopped
         tty: true
+        mem_limit: 1536m
+        cpus: 1
         depends_on:
             mysql-cleanup:
                 condition: service_completed_successfully
@@ -77,6 +83,8 @@ services:
         image: postgres:18-alpine
         restart: on-failure
         tty: true
+        mem_limit: 1024m
+        cpus: 1
         ports:
             - "5432:5432"
         environment:
@@ -101,6 +109,8 @@ services:
         image: redis:8-alpine
         restart: on-failure
         tty: true
+        mem_limit: 512m
+        cpus: 0.5
         ports:
             - "6379:6379"
         command:
@@ -126,6 +136,8 @@ services:
         image: rabbitmq:4.3.6-management-alpine
         restart: unless-stopped
         tty: true
+        mem_limit: 768m
+        cpus: 0.5
         ports:
             - "5672:5672"
             - "15672:15672"
@@ -153,6 +165,9 @@ services:
         image: apache/kafka:4.3.1
         container_name: kafka
         restart: unless-stopped
+        tty: true
+        mem_limit: 1536m
+        cpus: 1
         ports:
             - "9092:9092"
         environment:
@@ -188,6 +203,8 @@ services:
             timeout: 10s
             retries: 10
             start_period: 20s
+        networks:
+            - infra_network
     # ============================================================
     # OBSERVABILITY
     # ============================================================
@@ -196,11 +213,14 @@ services:
         image: prom/prometheus:v3.13.3
         restart: unless-stopped
         tty: true
+        mem_limit: 1024m
+        cpus: 0.75
         ports:
             - "9090:9090"
         volumes:
             - /home/vicky/Projects/ShopSense/server/deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
             - /home/vicky/Projects/ShopSense/data/prometheus:/prometheus:z
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/prometheus/rules/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro,z
         command:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
@@ -213,6 +233,8 @@ services:
         image: grafana/loki:3.7.8
         restart: unless-stopped
         tty: true
+        mem_limit: 768m
+        cpus: 0.5
         ports:
             - "3100:3100"
         volumes:
@@ -227,6 +249,8 @@ services:
         image: grafana/tempo:3.0.3
         restart: unless-stopped
         tty: true
+        mem_limit: 512m
+        cpus: 0.5
         ports:
             - "3200:3200"
             - "4317:4317"
@@ -244,6 +268,8 @@ services:
         image: grafana/grafana:13.2-slim
         restart: unless-stopped
         tty: true
+        mem_limit: 384m
+        cpus: 0.5
         ports:
             - "3000:3000"
         volumes:
@@ -260,6 +286,8 @@ services:
         image: grafana/alloy:v1.19.0
         restart: unless-stopped
         tty: true
+        mem_limit: 256m
+        cpus: 0.25
         ports:
             - "12345:12345"
         volumes:
@@ -275,6 +303,24 @@ services:
             - loki
         networks:
             - track_network
+    alertmanager:
+        container_name: alertmanager
+        image: prom/alertmanager:v0.28.1
+        restart: unless-stopped
+        mem_limit: 128m
+        cpus: 0.25
+        ports:
+            - "9093:9093"
+        env_file:
+            - ../.env.docker
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro,z
+            - /home/vicky/Projects/ShopSense/data/alertmanager:/alertmanager:z
+        command:
+            - "--config.file=/etc/alertmanager/alertmanager.yml"
+            - "--storage.path=/alertmanager"
+        networks:
+            - track_network
     # ============================================================
     # SPRING BOOT SERVICES
     # ============================================================
@@ -283,12 +329,18 @@ services:
         build:
             context: ../../eureka-service
             dockerfile: Dockerfile
-        image: shopsense/eureka-service:latest
+        image: shopsense/eureka-service:1.0.0
         restart: unless-stopped
+        mem_limit: 384m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         ports:
             - "8761:8761"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         healthcheck:
             test:
               [
@@ -306,12 +358,18 @@ services:
         build:
             context: ../../gateway-service
             dockerfile: Dockerfile
-        image: shopsense/gateway-service:latest
+        image: shopsense/gateway-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.75
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         ports:
             - "8080:8080"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -335,12 +393,18 @@ services:
         build:
             context: ../../user-service
             dockerfile: Dockerfile
-        image: shopsense/user-service:latest
+        image: shopsense/user-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8081"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -366,12 +430,18 @@ services:
         build:
             context: ../../catalog-service
             dockerfile: Dockerfile
-        image: shopsense/catalog-service:latest
+        image: shopsense/catalog-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8082"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -395,12 +465,18 @@ services:
         build:
             context: ../../inventory-service
             dockerfile: Dockerfile
-        image: shopsense/inventory-service:latest
+        image: shopsense/inventory-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8083"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -424,12 +500,18 @@ services:
         build:
             context: ../../media-service
             dockerfile: Dockerfile
-        image: shopsense/media-service:latest
+        image: shopsense/media-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8084"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -453,12 +535,18 @@ services:
         build:
             context: ../../order-service
             dockerfile: Dockerfile
-        image: shopsense/order-service:latest
+        image: shopsense/order-service:1.0.0
         restart: unless-stopped
+        mem_limit: 640m
+        cpus: 0.75
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8085"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -486,12 +574,18 @@ services:
         build:
             context: ../../payment-service
             dockerfile: Dockerfile
-        image: shopsense/payment-service:latest
+        image: shopsense/payment-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8086"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -515,12 +609,18 @@ services:
         build:
             context: ../../notification-service
             dockerfile: Dockerfile
-        image: shopsense/notification-service:latest
+        image: shopsense/notification-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8087"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy
@@ -546,12 +646,18 @@ services:
         build:
             context: ../../orchestrator-service
             dockerfile: Dockerfile
-        image: shopsense/orchestrator-service:latest
+        image: shopsense/orchestrator-service:1.0.0
         restart: unless-stopped
+        mem_limit: 512m
+        cpus: 0.5
+        environment:
+            JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60.0"
         env_file:
             - ../.env.docker
         expose:
             - "8088"
+        volumes:
+            - /home/vicky/Projects/ShopSense/server/deploy/logs:/app/deploy/logs:rw,z
         depends_on:
             eureka-service:
                 condition: service_healthy

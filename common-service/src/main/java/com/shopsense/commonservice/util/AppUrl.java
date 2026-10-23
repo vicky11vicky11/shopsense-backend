@@ -2,6 +2,7 @@ package com.shopsense.commonservice.util;
 
 public final class AppUrl {
 
+
     private AppUrl(){}
 
     //    Base URL
@@ -27,5 +28,9 @@ public final class AppUrl {
     public static final String SELLER_URL = BASE_URL + "/sellers";
     public static final String ADMIN_URL = BASE_URL + "/admins";
     public static final String ADDRESS_URL = BASE_URL + "/addresses";
+
+    public static final String NOTIFICATION_URL = BASE_URL + "/notifications";
+
+    public static final String ORCHESTRATOR_URL = BASE_URL + "/orchestrator";
 }
 

@@ -18,7 +18,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "notifications", uniqueConstraints = { @UniqueConstraint(name = "uk_notification_event_channel", columnNames = { "event_id", "notification_channel" }) }, indexes = { @Index(name = "idx_notification_channel", columnList = "notification_channel"), @Index(name = "idx_notification_event_id", columnList = "event_id") })
+@Table(name = "notifications", uniqueConstraints = { @UniqueConstraint(name = "uk_notification_event_channel", columnNames = { "event_id", "notification_channel" }) }, indexes = { @Index(name = "idx_notification_channel", columnList = "notification_channel"), @Index(name = "idx_notification_event_id", columnList = "event_id"), @Index(name = "idx_notification_status", columnList = "status")
+})
 public class Notification {
 
     @Id
